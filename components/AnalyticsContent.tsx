@@ -254,7 +254,7 @@ export default function AnalyticsContent() {
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
-                      innerRadius={50}
+                      innerRadius={60}
                       label={({ name, percent }: { name?: string; percent?: number }) =>
                         `${name ?? ''} (${((percent ?? 0) * 100).toFixed(0)}%)`
                       }
@@ -277,7 +277,7 @@ export default function AnalyticsContent() {
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={issueData} margin={{ top: 0, right: 0, left: -20, bottom: 50 }}>
-                    <CartesianGrid strokeDasharray="" vertical={false} stroke="#F3F4F6" />
+                    <CartesianGrid strokeDasharray="0" vertical={false} stroke="#F3F4F6" />
                     <XAxis
                       dataKey="name"
                       tick={{ fontSize: 10, fill: '#9CA3AF' }}
