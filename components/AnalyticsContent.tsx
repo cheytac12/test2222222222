@@ -144,45 +144,45 @@ export default function AnalyticsContent() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <main className="max-w-7xl mx-auto py-6 px-6 space-y-6">
+    <main className="max-w-7xl mx-auto py-8 px-6 space-y-6">
       {/* Filters */}
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4">
-        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Filters</h2>
+      <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Filters</h2>
         <div className="flex flex-wrap gap-3 items-end">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <label className="text-xs text-slate-500 font-medium">From Date</label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-700"
             />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <label className="text-xs text-slate-500 font-medium">To Date</label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-700"
             />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <label className="text-xs text-slate-500 font-medium">Issue Type</label>
             <select
               value={issueType}
               onChange={(e) => setIssueType(e.target.value)}
-              className="border border-slate-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700"
             >
               {ISSUE_TYPES.map((t) => <option key={t}>{t}</option>)}
             </select>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <label className="text-xs text-slate-500 font-medium">Status</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="border border-slate-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700"
             >
               {STATUS_OPTIONS.map((s) => <option key={s}>{s}</option>)}
             </select>
@@ -190,7 +190,7 @@ export default function AnalyticsContent() {
           {hasFilters && (
             <button
               onClick={handleClear}
-              className="text-sm text-slate-500 hover:text-slate-700 px-3 py-2 border border-slate-300 rounded transition-colors"
+              className="text-sm text-slate-500 hover:text-slate-700 px-3 py-2 border border-slate-300 rounded-lg transition-colors hover:bg-slate-50"
             >
               Clear Filters
             </button>
@@ -199,14 +199,17 @@ export default function AnalyticsContent() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded px-4 py-3 text-sm">
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3.5 text-sm flex items-center gap-2">
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-16 text-center">
-          <div className="w-8 h-8 border-2 border-slate-300 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <div className="bg-white rounded-2xl border border-slate-200 p-16 text-center">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-sm text-slate-500">Loading analytics…</p>
         </div>
       ) : (
@@ -214,14 +217,14 @@ export default function AnalyticsContent() {
           {/* KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: 'Total Complaints', value: stats.total, color: 'bg-slate-800' },
-              { label: 'Pending', value: stats.pending, color: 'bg-yellow-500' },
-              { label: 'In Progress', value: stats.inProgress, color: 'bg-blue-600' },
-              { label: 'Resolved', value: stats.resolved, color: 'bg-green-600' },
+              { label: 'Total Complaints', value: stats.total, bg: 'bg-slate-900', icon: '📋' },
+              { label: 'Pending', value: stats.pending, bg: 'bg-amber-500', icon: '⏱' },
+              { label: 'In Progress', value: stats.inProgress, bg: 'bg-blue-600', icon: '🔄' },
+              { label: 'Resolved', value: stats.resolved, bg: 'bg-emerald-600', icon: '✓' },
             ].map((s) => (
-              <div key={s.label} className={`${s.color} text-white rounded-lg px-5 py-4 shadow-sm`}>
-                <p className="text-xs opacity-80">{s.label}</p>
-                <p className="text-3xl font-bold mt-1">{s.value}</p>
+              <div key={s.label} className={`${s.bg} text-white rounded-2xl px-5 py-5`}>
+                <p className="text-xs opacity-75 font-medium">{s.label}</p>
+                <p className="text-3xl font-black mt-1">{s.value}</p>
               </div>
             ))}
           </div>
@@ -229,8 +232,8 @@ export default function AnalyticsContent() {
           {/* Charts row 1: Status Pie + Issue Type Bar */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Complaints by Status */}
-            <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
-              <h3 className="text-sm font-semibold text-slate-700 mb-4">Complaints by Status</h3>
+            <div className="bg-white rounded-2xl border border-slate-200 p-6">
+              <h3 className="text-sm font-semibold text-slate-800 mb-5">Complaints by Status</h3>
               {statusData.length === 0 ? (
                 <p className="text-sm text-slate-400 text-center py-8">No data</p>
               ) : (
@@ -262,8 +265,8 @@ export default function AnalyticsContent() {
             </div>
 
             {/* Complaints by Issue Type */}
-            <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
-              <h3 className="text-sm font-semibold text-slate-700 mb-4">Complaints by Issue Type</h3>
+            <div className="bg-white rounded-2xl border border-slate-200 p-6">
+              <h3 className="text-sm font-semibold text-slate-800 mb-5">Complaints by Issue Type</h3>
               {issueData.length === 0 ? (
                 <p className="text-sm text-slate-400 text-center py-8">No data</p>
               ) : (
@@ -291,8 +294,8 @@ export default function AnalyticsContent() {
           </div>
 
           {/* Complaints over Time */}
-          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
-            <h3 className="text-sm font-semibold text-slate-700 mb-4">Complaints over Time</h3>
+          <div className="bg-white rounded-2xl border border-slate-200 p-6">
+            <h3 className="text-sm font-semibold text-slate-800 mb-5">Complaints over Time</h3>
             {timeData.length === 0 ? (
               <p className="text-sm text-slate-400 text-center py-8">No data</p>
             ) : (
