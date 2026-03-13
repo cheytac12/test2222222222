@@ -21,7 +21,7 @@ Browser (Next.js / React)
   │   └── /admin/map (Admin Leaflet Map)
   │
   └── API Routes (Next.js App Router)
-      ├── POST /api/complaints          → Submit new complaint + SMS
+      ├── POST /api/complaints          → Submit new complaint + Email
       ├── GET  /api/complaints          → List all (with filters)
       ├── GET  /api/complaints/[id]     → Get complaint + images by ID
       ├── PATCH /api/complaints/[id]    → Update status (admin)
@@ -37,8 +37,8 @@ Supabase (PostgreSQL)
 Supabase Storage
   └── complaint-images bucket
 
-Twilio (SMS)
-  └── Confirmation SMS on complaint submission
+Nodemailer + Gmail
+  └── Confirmation email on complaint submission
 ```
 
 ---
@@ -53,7 +53,7 @@ Twilio (SMS)
 | Auth       | Custom JWT (bcrypt + jose) + httpOnly session cookie |
 | Storage    | Supabase Storage                     |
 | Map        | Leaflet.js + react-leaflet           |
-| SMS        | Twilio API                           |
+| Email      | Nodemailer + Gmail                   |
 | Language   | TypeScript                           |
 
 ---
@@ -143,7 +143,13 @@ See [`database/schema.sql`](./database/schema.sql) for the full Supabase SQL sch
 
    **Step 3b – Insert your first admin** (see the [Admin Management](#-admin-management) section below for details).
 
-4. In **Storage > Buckets**, create a bucket named **`complaint-images`** and set it to **Public**.
+4. **Add the `email` column** to the `complaints` table (run in **SQL Editor**):
+
+   ```sql
+   ALTER TABLE complaints ADD COLUMN IF NOT EXISTS email TEXT;
+   ```
+
+5. In **Storage > Buckets**, create a bucket named **`complaint-images`** and set it to **Public**.
 
 5. Add Storage policies (or run the commented-out SQL at the bottom of `schema.sql`):
    - Allow anonymous uploads to `complaint-images`
@@ -182,10 +188,15 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 # Generate one with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 JWT_SECRET=replace_this_with_a_long_random_secret_at_least_32_chars
 
-# Twilio SMS (optional – if not set, SMS step is skipped)
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=your-twilio-auth-token
-TWILIO_PHONE_NUMBER=+1234567890
+# Gmail (Nodemailer) – Email confirmation on complaint submission
+# Use a dedicated Gmail account (not your personal one)
+# Steps to get an App Password:
+#   1. Go to myaccount.google.com → Security
+#   2. Enable 2-Step Verification
+#   3. Search for "App passwords" and create one (e.g. "CrimeReport App")
+#   4. Copy the 16-character password, remove spaces, and paste it below
+GMAIL_USER=your-gmail-address@gmail.com
+GMAIL_APP_PASSWORD=your16charapppassword
 ```
 
 > ⚠️ **Never commit `.env.local` to version control.**
@@ -303,24 +314,35 @@ npm run start
 6. **Environment variables** for secrets are excluded from version control.
 7. **Images** are uploaded through the server – no direct client-to-storage writes needed.
 8. **Input validation** on all API routes before database operations.
-9. **Twilio credentials** are only accessed server-side.
+9. **Gmail credentials** are only accessed server-side.
 
 ---
 
-## 📱 SMS Integration (Twilio)
+## 📧 Email Integration (Nodemailer + Gmail)
 
 When a complaint is submitted:
 1. The server generates a unique `CR-XXXXX` complaint ID.
 2. The complaint is saved to Supabase.
-3. A Twilio SMS is sent to the submitter's phone number:
+3. A confirmation email is sent to the submitter's email address:
 
 ```
+Subject: Complaint Registered – ID: CR-10294
+
 Your complaint has been successfully registered.
-Complaint ID: CR-10294.
+Complaint ID: CR-10294
 Use this ID to track the status on our platform.
 ```
 
-If Twilio credentials are not configured, the SMS step is silently skipped and the complaint is still saved.
+If Gmail credentials are not configured, the email step is silently skipped and the complaint is still saved.
+
+### Getting a Gmail App Password
+
+1. Go to [myaccount.google.com](https://myaccount.google.com) → **Security**.
+2. Enable **2-Step Verification** (required).
+3. Search for **App passwords** and create a new one (e.g. "CrimeReport App").
+4. Copy the 16-character password, remove spaces, and set it as `GMAIL_APP_PASSWORD`.
+
+> 💡 **Tip:** Use a dedicated Gmail account (e.g. `crimereport.app@gmail.com`) rather than your personal email.
 
 ---
 

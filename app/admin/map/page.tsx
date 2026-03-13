@@ -8,6 +8,9 @@ import { getMarkerColor } from '@/lib/utils';
 
 const LiveMap = dynamic(() => import('@/components/LiveMap'), { ssr: false });
 
+const STATUS_OPTIONS = ['All', 'Pending', 'In Progress', 'Resolved'];
+const ISSUE_TYPES = ['All', 'Robbery', 'Murder', 'Assault', 'Theft', 'Harassment', 'Missing Person', 'Other'];
+
 const STATUS_BADGE: Record<string, string> = {
   Pending: 'bg-amber-50 text-amber-700 border-amber-200',
   'In Progress': 'bg-blue-50 text-blue-700 border-blue-200',
@@ -16,12 +19,30 @@ const STATUS_BADGE: Record<string, string> = {
 
 export default function AdminMapPage() {
   const [complaints, setComplaints] = useState<ComplaintWithImages[]>([]);
+  const [filtered, setFiltered] = useState<ComplaintWithImages[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   useEffect(() => {
     fetchComplaints();
   }, []);
+
+  useEffect(() => {
+    let result = complaints;
+    if (statusFilter !== 'All') result = result.filter((c) => c.status === statusFilter);
+    if (typeFilter !== 'All') result = result.filter((c) => c.issue_type === typeFilter);
+    if (dateFrom || dateTo) {
+      result = result.filter((c) => {
+        const date = c.created_at.slice(0, 10);
+        return (!dateFrom || date >= dateFrom) && (!dateTo || date <= dateTo);
+      });
+    }
+    setFiltered(result);
+  }, [complaints, statusFilter, typeFilter, dateFrom, dateTo]);
 
   async function fetchComplaints() {
     try {
@@ -53,7 +74,7 @@ export default function AdminMapPage() {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-mono text-gray-400 hidden sm:block">
-              {complaints.length} complaint{complaints.length !== 1 ? 's' : ''} on map
+              {filtered.length} of {complaints.length} complaint{filtered.length !== 1 ? 's' : ''} on map
             </span>
             <button
               onClick={() => { setLoading(true); fetchComplaints(); }}
@@ -67,6 +88,65 @@ export default function AdminMapPage() {
           </div>
         </div>
       </header>
+
+      {/* Filter Bar */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3 flex-shrink-0">
+        <div className="flex flex-wrap gap-1.5 items-center">
+          {/* Status toggle group */}
+          <div className="flex border border-gray-200 rounded-sm overflow-hidden">
+            {STATUS_OPTIONS.map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors uppercase tracking-wide border-r border-gray-200 last:border-r-0 ${
+                  statusFilter === s
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          {/* Type select */}
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="border border-gray-200 rounded-sm px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 text-gray-700 uppercase tracking-wide"
+          >
+            {ISSUE_TYPES.map((t) => <option key={t}>{t}</option>)}
+          </select>
+
+          {/* Date range */}
+          <div className="flex items-center gap-1.5">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">From</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="border border-gray-200 rounded-sm px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 text-gray-700"
+            />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">To</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="border border-gray-200 rounded-sm px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 text-gray-700"
+            />
+          </div>
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => { setDateFrom(''); setDateTo(''); }}
+              className="text-xs text-gray-500 hover:text-gray-900 px-2 py-1.5 border border-gray-200 rounded-sm transition-colors"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
 
       {error && (
         <div className="bg-red-50 border-b border-red-200 text-red-700 px-6 py-3 text-sm flex items-center gap-2 flex-shrink-0">
@@ -86,7 +166,7 @@ export default function AdminMapPage() {
             </div>
           </div>
         ) : (
-          <LiveMap complaints={complaints} height="calc(100vh - 120px)" />
+          <LiveMap complaints={filtered} height="calc(100vh - 180px)" />
         )}
       </div>
 
@@ -101,6 +181,9 @@ export default function AdminMapPage() {
             </span>
           </div>
         ))}
+        <span className="ml-auto text-[10px] font-mono text-gray-400">
+          Showing {filtered.length} of {complaints.length}
+        </span>
       </div>
     </div>
   );

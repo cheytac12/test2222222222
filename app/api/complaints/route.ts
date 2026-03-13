@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { generateComplaintId } from '@/lib/utils';
+import nodemailer from 'nodemailer';
+
+// ─── Email transporter (created once, reused across requests) ─────────────
+let emailTransporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+
+function getEmailTransporter() {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+  if (!user || !pass) return null;
+  if (!emailTransporter) {
+    emailTransporter = nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
+  }
+  return emailTransporter;
+}
 
 // ─── In-memory IP rate limiter ─────────────────────────────────────────────
 // Allows up to MAX_REQUESTS per IP within WINDOW_MS milliseconds.
@@ -93,7 +107,8 @@ export async function POST(request: NextRequest) {
     }
 
     const name = formData.get('name') as string;
-    const phone = formData.get('phone') as string;
+    const email = formData.get('email') as string;
+    const phone = formData.get('phone') as string | null;
     const issue_type = formData.get('issue_type') as string;
     const description = formData.get('description') as string;
     const latStr = formData.get('latitude') as string | null;
@@ -101,9 +116,9 @@ export async function POST(request: NextRequest) {
     const images = formData.getAll('images') as File[];
 
     // Validate required fields
-    if (!name || !phone || !issue_type || !description) {
+    if (!name || !email || !issue_type || !description) {
       return NextResponse.json(
-        { error: 'Missing required fields: name, phone, issue_type, description' },
+        { error: 'Missing required fields: name, email, issue_type, description' },
         { status: 400 }
       );
     }
@@ -140,7 +155,8 @@ export async function POST(request: NextRequest) {
       .insert({
         complaint_id,
         name,
-        phone,
+        email,
+        phone: phone || null,
         issue_type,
         description,
         latitude: latStr ? parseFloat(latStr) : null,
@@ -200,8 +216,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Send SMS confirmation via Twilio (best-effort, don't fail if SMS fails)
-    await sendSmsConfirmation(phone, complaint_id);
+    // Send email confirmation via Nodemailer (best-effort, don't fail if email fails)
+    await sendEmailConfirmation(email, complaint_id);
 
     return NextResponse.json({ success: true, complaint_id }, { status: 201 });
   } catch (err) {
@@ -210,28 +226,26 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ─── SMS Helper ────────────────────────────────────────────────────────────
-async function sendSmsConfirmation(to: string, complaintId: string) {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_PHONE_NUMBER;
-
-  if (!accountSid || !authToken || !from) {
-    console.warn('Twilio credentials not configured; skipping SMS.');
+// ─── Email Helper ────────────────────────────────────────────────────────────
+async function sendEmailConfirmation(to: string, complaintId: string) {
+  const transporter = getEmailTransporter();
+  if (!transporter) {
+    console.warn('Gmail credentials not configured; skipping email.');
     return;
   }
 
+  const user = process.env.GMAIL_USER;
   try {
-    // Dynamic import to avoid requiring Twilio at module load time
-    const twilio = (await import('twilio')).default;
-    const client = twilio(accountSid, authToken);
-    await client.messages.create({
-      body: `Your complaint has been successfully registered. Complaint ID: ${complaintId}. Use this ID to track the status on our platform.`,
-      from,
+    await transporter.sendMail({
+      from: `"Crime Report Portal" <${user}>`,
       to,
+      subject: `Complaint Registered – ID: ${complaintId}`,
+      text: `Your complaint has been successfully registered.\n\nComplaint ID: ${complaintId}\n\nUse this ID to track the status on our platform.`,
+      html: `<p>Your complaint has been successfully registered.</p><p><strong>Complaint ID:</strong> ${complaintId}</p><p>Use this ID to track the status on our platform.</p>`,
     });
-    console.log(`SMS sent to ${to} for complaint ${complaintId}`);
-  } catch (smsErr) {
-    console.error('SMS send error (non-fatal):', smsErr);
+
+    console.log(`Email sent to ${to} for complaint ${complaintId}`);
+  } catch (emailErr) {
+    console.error('Email send error (non-fatal):', emailErr);
   }
 }

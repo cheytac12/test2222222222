@@ -20,6 +20,7 @@ export default function ComplaintPage() {
 
   const [form, setForm] = useState({
     name: '',
+    email: '',
     phone: '',
     issue_type: '',
     description: '',
@@ -83,7 +84,7 @@ export default function ComplaintPage() {
     e.preventDefault();
     setError('');
 
-    if (!form.name.trim() || !form.phone.trim() || !form.issue_type || !form.description.trim()) {
+    if (!form.name.trim() || !form.email.trim() || !form.issue_type || !form.description.trim()) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -98,6 +99,7 @@ export default function ComplaintPage() {
     try {
       const fd = new FormData();
       fd.append('name', form.name.trim());
+      fd.append('email', form.email.trim());
       fd.append('phone', form.phone.trim());
       fd.append('issue_type', form.issue_type);
       fd.append('description', form.description.trim());
@@ -130,7 +132,7 @@ export default function ComplaintPage() {
           <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">Submission Confirmed</p>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Complaint Submitted</h1>
           <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-            Your complaint has been registered. An SMS confirmation has been sent to your phone.
+            Your complaint has been registered. An email confirmation has been sent to your email address.
           </p>
           <div className="bg-[#F7F7F5] border border-gray-200 p-5 mb-6">
             <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">Your Complaint ID</p>
@@ -213,8 +215,26 @@ export default function ComplaintPage() {
               </div>
 
               <div>
+                <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Email Address <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="e.g. john@example.com"
+                  required
+                  aria-required="true"
+                  className="w-full border border-gray-200 rounded-sm px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 placeholder:text-gray-400"
+                />
+                <p className="text-xs text-gray-400 mt-1.5">An email confirmation will be sent to this address.</p>
+              </div>
+
+              <div>
                 <label htmlFor="phone" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Phone Number <span className="text-red-600">*</span>
+                  Phone Number <span className="text-gray-400 normal-case font-normal">(Optional)</span>
                 </label>
                 <input
                   id="phone"
@@ -223,10 +243,8 @@ export default function ComplaintPage() {
                   value={form.phone}
                   onChange={handleChange}
                   placeholder="e.g. +1 555-123-4567"
-                  required
                   className="w-full border border-gray-200 rounded-sm px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 placeholder:text-gray-400"
                 />
-                <p className="text-xs text-gray-400 mt-1.5">An SMS confirmation will be sent to this number.</p>
               </div>
             </div>
           </div>
