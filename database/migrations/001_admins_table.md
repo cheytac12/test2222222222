@@ -45,8 +45,6 @@ You can generate it with Node.js in your terminal:
 node -e "const bcrypt = require('bcryptjs'); bcrypt.hash('YourPassword123', 12).then(h => console.log(h));"
 ```
 
-Or use an online bcrypt generator (e.g. https://bcrypt-generator.com) with **12 rounds**.
-
 ```sql
 -- Insert a default admin (replace values as needed)
 INSERT INTO admins (name, phone, password_hash, role)

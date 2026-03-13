@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   // Generate a signed JWT
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret || jwtSecret.length < 32) {
-    console.error('JWT_SECRET is not set or is too short (min 32 chars)');
+    console.error('Admin login failed: JWT_SECRET environment variable is missing or too short.');
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 

@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
     // If the hidden honeypot field is filled, this is likely a bot
     const honeypot = formData.get('website') as string | null;
     if (honeypot && honeypot.trim() !== '') {
-      // Return a fake success to not reveal detection to bots
-      return NextResponse.json({ success: true, complaint_id: 'CR-00000' }, { status: 201 });
+    // Return a fake success with a realistic-looking ID to avoid detection
+    return NextResponse.json({ success: true, complaint_id: generateComplaintId() }, { status: 201 });
     }
 
     const name = formData.get('name') as string;
