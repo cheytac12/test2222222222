@@ -15,7 +15,8 @@ export interface Complaint {
   id: string;               // UUID primary key
   complaint_id: string;     // e.g. "CR-10294"
   name: string;
-  phone: string;
+  email: string | null;
+  phone: string | null;
   issue_type: IssueType | string;
   description: string;
   latitude: number | null;

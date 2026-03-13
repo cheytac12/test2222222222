@@ -244,7 +244,7 @@ export default function AdminDashboardPage() {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    {['Complaint ID', 'Name', 'Phone', 'Issue Type', 'Description', 'Location', 'Status', 'Registered', 'Actions'].map((h) => (
+                    {['Complaint ID', 'Name', 'Email', 'Phone', 'Issue Type', 'Description', 'Location', 'Status', 'Registered', 'Actions'].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-[10px] font-mono uppercase tracking-widest text-gray-400 whitespace-nowrap border-b border-gray-100">
                         {h}
                       </th>
@@ -258,7 +258,8 @@ export default function AdminDashboardPage() {
                         {c.complaint_id}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap font-medium text-gray-800 text-xs">{c.name}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-gray-500 text-xs">{c.phone}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-gray-500 text-xs">{c.email ?? '—'}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-gray-500 text-xs">{c.phone ?? '—'}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-sm text-xs font-medium uppercase tracking-wide">
                           {c.issue_type}
