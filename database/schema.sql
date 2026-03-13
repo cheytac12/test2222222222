@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS complaints (
   id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   complaint_id     TEXT UNIQUE NOT NULL,         -- e.g. "CR-10294"
   name             TEXT NOT NULL,
-  phone            TEXT NOT NULL,
+  email            TEXT,
+  phone            TEXT,
   issue_type       TEXT NOT NULL,
   description      TEXT NOT NULL,
   latitude         DOUBLE PRECISION,

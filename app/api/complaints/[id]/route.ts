@@ -41,6 +41,7 @@ export async function PATCH(
   const cookieStore = await cookies();
   const token = cookieStore.get('admin_session')?.value ?? null;
   if (!token) {
+    console.error('Admin PATCH failed: No token found in cookies');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -51,7 +52,8 @@ export async function PATCH(
 
   try {
     await jwtVerify(token, new TextEncoder().encode(jwtSecret));
-  } catch {
+  } catch (err) {
+    console.error('Admin PATCH failed: Token verification failed', err);
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
