@@ -108,6 +108,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate required location fields
+    if (!latStr || !lonStr) {
+      return NextResponse.json(
+        { error: 'Current location is required. Please provide latitude and longitude.' },
+        { status: 400 }
+      );
+    }
+
     // Generate a unique complaint ID (retry on collision, max 5 attempts)
     let complaint_id = '';
     for (let attempt = 0; attempt < 5; attempt++) {
