@@ -122,30 +122,33 @@ export default function ComplaintPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-        <div className="bg-white rounded-2xl shadow-lg border border-green-200 max-w-md w-full p-8 text-center">
-          <div className="text-5xl mb-4">✅</div>
-          <h1 className="text-2xl font-bold text-green-700 mb-2">Complaint Submitted!</h1>
-          <p className="text-slate-600 mb-4">
-            Your complaint has been successfully registered. An SMS confirmation has been sent to
-            your phone.
-          </p>
-          <div className="bg-green-50 border border-green-300 rounded-xl p-4 mb-6">
-            <p className="text-sm text-green-600 mb-1">Your Complaint ID</p>
-            <p className="text-3xl font-extrabold text-green-700">{success.complaint_id}</p>
-            <p className="text-xs text-green-500 mt-1">Save this ID to track your complaint</p>
+        <div className="bg-white rounded-lg shadow border border-slate-200 max-w-md w-full p-8">
+          <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mb-4">
+            <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-          <div className="flex flex-col gap-3">
+          <h1 className="text-xl font-bold text-slate-800 mb-2">Complaint Submitted</h1>
+          <p className="text-sm text-slate-500 mb-5">
+            Your complaint has been registered. An SMS confirmation has been sent to your phone.
+          </p>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-6">
+            <p className="text-xs text-slate-500 mb-1">Your Complaint ID</p>
+            <p className="text-2xl font-bold font-mono text-slate-800">{success.complaint_id}</p>
+            <p className="text-xs text-slate-400 mt-1">Save this ID to track your complaint</p>
+          </div>
+          <div className="flex flex-col gap-2">
             <button
               onClick={() => router.push(`/track?id=${success.complaint_id}`)}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded font-medium text-sm transition-colors"
             >
-              🔍 Track My Complaint
+              Track My Complaint
             </button>
             <Link
               href="/"
-              className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3 rounded-xl font-semibold transition-colors"
+              className="text-center bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-2.5 rounded font-medium text-sm transition-colors"
             >
-              ← Back to Home
+              Back to Home
             </Link>
           </div>
         </div>
@@ -158,32 +161,32 @@ export default function ComplaintPage() {
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <header className="bg-slate-900 text-white px-6 py-4 flex items-center gap-4">
-        <Link href="/" className="text-slate-300 hover:text-white transition-colors text-sm">
+        <Link href="/" className="text-slate-400 hover:text-white transition-colors text-sm">
           ← Home
         </Link>
-        <span className="text-slate-600">|</span>
-        <h1 className="text-lg font-bold">Register a Complaint</h1>
+        <span className="text-slate-700">|</span>
+        <h1 className="text-sm font-semibold">Register a Complaint</h1>
       </header>
 
       <main className="max-w-2xl mx-auto py-10 px-6">
-        <div className="bg-white rounded-2xl shadow border border-slate-200 overflow-hidden">
-          <div className="bg-red-600 text-white px-6 py-4">
-            <h2 className="text-xl font-bold">📋 Crime Complaint Registration</h2>
-            <p className="text-red-100 text-sm mt-1">
-              All fields marked with <span className="text-white font-bold">*</span> are required.
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-slate-800 text-white px-6 py-4">
+            <h2 className="text-base font-semibold">Crime Complaint Registration</h2>
+            <p className="text-slate-400 text-xs mt-1">
+              All fields marked with <span className="text-white">*</span> are required.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {error && (
-              <div className="bg-red-50 border border-red-300 text-red-700 rounded-lg px-4 py-3 text-sm">
-                ⚠️ {error}
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded px-4 py-3 text-sm">
+                {error}
               </div>
             )}
 
             {/* Personal Info */}
             <fieldset className="space-y-4">
-              <legend className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+              <legend className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
                 Personal Information
               </legend>
 
@@ -199,7 +202,7 @@ export default function ComplaintPage() {
                   onChange={handleChange}
                   placeholder="e.g. John Smith"
                   required
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-slate-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -215,7 +218,7 @@ export default function ComplaintPage() {
                   onChange={handleChange}
                   placeholder="e.g. +1 555-123-4567"
                   required
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-slate-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <p className="text-xs text-slate-400 mt-1">
                   An SMS confirmation will be sent to this number.
@@ -225,7 +228,7 @@ export default function ComplaintPage() {
 
             {/* Complaint Details */}
             <fieldset className="space-y-4">
-              <legend className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+              <legend className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
                 Complaint Details
               </legend>
 
@@ -239,9 +242,9 @@ export default function ComplaintPage() {
                   value={form.issue_type}
                   onChange={handleChange}
                   required
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="w-full border border-slate-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 >
-                  <option value="">-- Select issue type --</option>
+                  <option value="">Select issue type</option>
                   {ISSUE_TYPES.map((t) => (
                     <option key={t} value={t}>
                       {t}
@@ -262,14 +265,14 @@ export default function ComplaintPage() {
                   rows={5}
                   required
                   placeholder="Describe the incident in detail – what happened, when, who was involved, etc."
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+                  className="w-full border border-slate-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
                 />
               </div>
             </fieldset>
 
             {/* Location */}
             <fieldset className="space-y-4">
-              <legend className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+              <legend className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
                 Location (Optional)
               </legend>
 
@@ -277,20 +280,21 @@ export default function ComplaintPage() {
                 type="button"
                 onClick={handleGetLocation}
                 disabled={gpsLoading}
-                className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 px-4 py-3 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-300 px-4 py-2.5 rounded font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {gpsLoading ? (
                   <>
-                    <span className="animate-spin">⏳</span> Getting Location…
+                    <span className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                    Getting Location…
                   </>
                 ) : (
-                  <>📍 Use Current Location</>
+                  'Use Current Location'
                 )}
               </button>
 
               {gpsError && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                  ⚠️ {gpsError}
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+                  {gpsError}
                 </p>
               )}
 
@@ -307,7 +311,7 @@ export default function ComplaintPage() {
                     value={form.latitude}
                     onChange={handleChange}
                     placeholder="e.g. 40.712776"
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50"
+                    className="w-full border border-slate-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50"
                   />
                 </div>
                 <div>
@@ -322,31 +326,28 @@ export default function ComplaintPage() {
                     value={form.longitude}
                     onChange={handleChange}
                     placeholder="e.g. -74.005974"
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50"
+                    className="w-full border border-slate-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50"
                   />
                 </div>
               </div>
               {form.latitude && form.longitude && (
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  ✅ Location captured: {form.latitude}, {form.longitude}
+                <p className="text-xs text-green-600">
+                  Location captured: {form.latitude}, {form.longitude}
                 </p>
               )}
             </fieldset>
 
             {/* Image Upload */}
             <fieldset className="space-y-4">
-              <legend className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+              <legend className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
                 Images (Optional)
               </legend>
 
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-300 hover:border-blue-400 rounded-lg p-6 text-center cursor-pointer transition-colors"
+                className="border-2 border-dashed border-slate-200 hover:border-slate-400 rounded-lg p-6 text-center cursor-pointer transition-colors"
               >
-                <div className="text-3xl mb-2">📸</div>
-                <p className="text-sm text-slate-600">
-                  Click to upload images (multiple allowed)
-                </p>
+                <p className="text-sm text-slate-500 font-medium">Click to upload images</p>
                 <p className="text-xs text-slate-400 mt-1">JPEG, PNG, WebP – max 10 MB each</p>
               </div>
               <input
@@ -366,7 +367,7 @@ export default function ComplaintPage() {
                       <img
                         src={URL.createObjectURL(img)}
                         alt={`Preview ${i + 1}`}
-                        className="w-full h-24 object-cover rounded-lg border border-slate-200"
+                        className="w-full h-24 object-cover rounded border border-slate-200"
                       />
                       <button
                         type="button"
@@ -386,14 +387,15 @@ export default function ComplaintPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-red-600 hover:bg-red-500 text-white px-6 py-4 rounded-xl text-base font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
-                  <span className="animate-spin">⏳</span> Submitting…
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Submitting…
                 </>
               ) : (
-                '🚨 Submit Complaint'
+                'Submit Complaint'
               )}
             </button>
           </form>

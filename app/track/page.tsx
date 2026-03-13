@@ -67,36 +67,39 @@ function TrackContent() {
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <header className="bg-slate-900 text-white px-6 py-4 flex items-center gap-4">
-        <Link href="/" className="text-slate-300 hover:text-white transition-colors text-sm">
+        <Link href="/" className="text-slate-400 hover:text-white transition-colors text-sm">
           ← Home
         </Link>
-        <span className="text-slate-600">|</span>
-        <h1 className="text-lg font-bold">Track Your Complaint</h1>
+        <span className="text-slate-700">|</span>
+        <h1 className="text-sm font-semibold">Track Your Complaint</h1>
       </header>
 
       <main className="max-w-2xl mx-auto py-10 px-6">
         {/* Search Box */}
-        <div className="bg-white rounded-2xl shadow border border-slate-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">🔍 Enter Complaint ID</h2>
+        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
+          <h2 className="text-base font-semibold text-slate-800 mb-4">Enter Complaint ID</h2>
           <form onSubmit={handleSearch} className="flex gap-3">
             <input
               type="text"
               value={complaintId}
               onChange={(e) => setComplaintId(e.target.value)}
               placeholder="e.g. CR-10294"
-              className="flex-1 border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+              className="flex-1 border border-slate-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
             />
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-medium text-sm transition-colors disabled:opacity-50"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded font-medium text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              {loading ? '⏳' : 'Search'}
+              {loading ? (
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : null}
+              Search
             </button>
           </form>
           {error && (
-            <p className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              ⚠️ {error}
+            <p className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+              {error}
             </p>
           )}
         </div>
@@ -106,27 +109,24 @@ function TrackContent() {
           <div className="space-y-4">
             {/* Status Banner */}
             <div
-              className={`rounded-2xl border px-6 py-4 flex items-center justify-between ${getStatusColor(complaint.status)}`}
+              className={`rounded-lg border px-6 py-4 flex items-center justify-between ${getStatusColor(complaint.status)}`}
             >
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide opacity-70">
+                <p className="text-xs font-semibold uppercase tracking-widest opacity-70">
                   Current Status
                 </p>
-                <p className="text-xl font-bold">{complaint.status}</p>
+                <p className="text-lg font-bold">{complaint.status}</p>
               </div>
-              <div className="text-3xl">
-                {complaint.status === 'Resolved'
-                  ? '✅'
-                  : complaint.status === 'In Progress'
-                  ? '🔄'
-                  : '⏳'}
-              </div>
+              <div
+                className="w-8 h-8 rounded-full border-2 border-current opacity-40"
+                aria-hidden="true"
+              />
             </div>
 
             {/* Complaint Details */}
-            <div className="bg-white rounded-2xl shadow border border-slate-200 divide-y divide-slate-100">
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200 divide-y divide-slate-100">
               <div className="px-6 py-4">
-                <h3 className="font-bold text-slate-800 text-lg mb-3">Complaint Details</h3>
+                <h3 className="font-semibold text-slate-800 mb-3">Complaint Details</h3>
                 <dl className="space-y-2 text-sm">
                   <DetailRow label="Complaint ID" value={complaint.complaint_id} mono />
                   <DetailRow label="Registered Name" value={complaint.name} />
@@ -139,15 +139,15 @@ function TrackContent() {
               </div>
 
               <div className="px-6 py-4">
-                <p className="text-sm font-medium text-slate-500 mb-1">Description</p>
+                <p className="text-xs font-medium text-slate-500 mb-2">Description</p>
                 <p className="text-sm text-slate-700 leading-relaxed">{complaint.description}</p>
               </div>
             </div>
 
             {/* Images */}
             {images.length > 0 && (
-              <div className="bg-white rounded-2xl shadow border border-slate-200 p-6">
-                <h3 className="font-bold text-slate-800 mb-4">📸 Uploaded Images</h3>
+              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+                <h3 className="font-semibold text-slate-800 mb-4">Uploaded Images</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {images.map((img) => (
                     <a
@@ -160,7 +160,7 @@ function TrackContent() {
                       <img
                         src={img.public_url}
                         alt="Complaint evidence"
-                        className="w-full h-32 object-cover rounded-lg border border-slate-200 hover:opacity-90 transition-opacity"
+                        className="w-full h-32 object-cover rounded border border-slate-200 hover:opacity-90 transition-opacity"
                       />
                     </a>
                   ))}
@@ -170,8 +170,8 @@ function TrackContent() {
 
             {/* Mini Map */}
             {complaint.latitude != null && complaint.longitude != null && (
-              <div className="bg-white rounded-2xl shadow border border-slate-200 p-6">
-                <h3 className="font-bold text-slate-800 mb-4">📍 Incident Location</h3>
+              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+                <h3 className="font-semibold text-slate-800 mb-4">Incident Location</h3>
                 <MiniMap
                   latitude={complaint.latitude}
                   longitude={complaint.longitude}
@@ -207,7 +207,7 @@ function DetailRow({
 
 export default function TrackPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading…</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-slate-500">Loading…</div>}>
       <TrackContent />
     </Suspense>
   );
