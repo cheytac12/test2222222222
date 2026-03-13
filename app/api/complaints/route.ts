@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { generateComplaintId } from '@/lib/utils';
+import { isTwilioConfigured, sendSms } from '@/lib/twilio';
 
 // ─── GET /api/complaints ───────────────────────────────────────────────────
 // Returns all complaints (used by map dashboard and admin panel)
@@ -135,38 +136,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Send SMS confirmation via Twilio (best-effort, don't fail if SMS fails)
-    await sendSmsConfirmation(phone, complaint_id);
+    // Send SMS confirmation via Twilio direct API (best-effort, don't fail if SMS fails)
+    if (isTwilioConfigured()) {
+      try {
+        await sendSms(
+          phone,
+          `Your complaint has been successfully registered. Complaint ID: ${complaint_id}. Use this ID to track the status on our platform.`
+        );
+        console.log(`SMS sent to ${phone} for complaint ${complaint_id}`);
+      } catch (smsErr) {
+        console.error('SMS send error (non-fatal):', smsErr);
+      }
+    } else {
+      console.warn('Twilio credentials not configured; skipping SMS.');
+    }
 
     return NextResponse.json({ success: true, complaint_id }, { status: 201 });
   } catch (err) {
     console.error('POST /api/complaints unexpected error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-// ─── SMS Helper ────────────────────────────────────────────────────────────
-async function sendSmsConfirmation(to: string, complaintId: string) {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_PHONE_NUMBER;
-
-  if (!accountSid || !authToken || !from) {
-    console.warn('Twilio credentials not configured; skipping SMS.');
-    return;
-  }
-
-  try {
-    // Dynamic import to avoid requiring Twilio at module load time
-    const twilio = (await import('twilio')).default;
-    const client = twilio(accountSid, authToken);
-    await client.messages.create({
-      body: `Your complaint has been successfully registered. Complaint ID: ${complaintId}. Use this ID to track the status on our platform.`,
-      from,
-      to,
-    });
-    console.log(`SMS sent to ${to} for complaint ${complaintId}`);
-  } catch (smsErr) {
-    console.error('SMS send error (non-fatal):', smsErr);
   }
 }
