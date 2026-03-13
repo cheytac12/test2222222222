@@ -70,16 +70,10 @@ export default function AdminDashboardPage() {
     setUpdateError('');
 
     try {
-      const sessionToken = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('admin_session='))
-        ?.split('=')[1] ?? '';
-
       const res = await fetch(`/api/complaints/${encodeURIComponent(updating)}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${sessionToken}`,
         },
         body: JSON.stringify({ status: updateStatus, notes: updateNotes }),
       });

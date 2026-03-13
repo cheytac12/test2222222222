@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase-server';
 
 // ─── GET /api/complaints/[id] ──────────────────────────────────────────────
@@ -35,9 +36,9 @@ export async function PATCH(
 ) {
   const { id } = await params;
 
-  // Validate admin session token from Authorization header
-  const authHeader = request.headers.get('Authorization');
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  // Validate admin session token from httpOnly cookie
+  const cookieStore = await cookies();
+  const token = cookieStore.get('admin_session')?.value ?? null;
   if (!token || token !== process.env.ADMIN_SESSION_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
