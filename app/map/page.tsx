@@ -19,6 +19,8 @@ export default function MapPage() {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [typeFilter, setTypeFilter] = useState('All');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   useEffect(() => {
     fetchComplaints();
@@ -31,8 +33,14 @@ export default function MapPage() {
     let result = complaints;
     if (statusFilter !== 'All') result = result.filter((c) => c.status === statusFilter);
     if (typeFilter !== 'All') result = result.filter((c) => c.issue_type === typeFilter);
+    if (dateFrom || dateTo) {
+      result = result.filter((c) => {
+        const date = c.created_at.slice(0, 10);
+        return (!dateFrom || date >= dateFrom) && (!dateTo || date <= dateTo);
+      });
+    }
     setFiltered(result);
-  }, [complaints, statusFilter, typeFilter]);
+  }, [complaints, statusFilter, typeFilter, dateFrom, dateTo]);
 
   async function fetchComplaints() {
     try {
@@ -53,6 +61,8 @@ export default function MapPage() {
     inProgress: complaints.filter((c) => c.status === 'In Progress').length,
     resolved: complaints.filter((c) => c.status === 'Resolved').length,
   };
+
+  const hasDateFilter = !!(dateFrom || dateTo);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -84,7 +94,7 @@ export default function MapPage() {
           </div>
 
           {/* Filters */}
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 items-end">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -103,6 +113,34 @@ export default function MapPage() {
                 <option key={t}>{t}</option>
               ))}
             </select>
+            <div className="flex items-center gap-1 text-xs text-slate-500">
+              <label htmlFor="map-date-from" className="font-medium">From</label>
+              <input
+                id="map-date-from"
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="border border-slate-300 rounded px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex items-center gap-1 text-xs text-slate-500">
+              <label htmlFor="map-date-to" className="font-medium">To</label>
+              <input
+                id="map-date-to"
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="border border-slate-300 rounded px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            {hasDateFilter && (
+              <button
+                onClick={() => { setDateFrom(''); setDateTo(''); }}
+                className="text-xs text-slate-500 hover:text-slate-700 px-2 py-1.5 border border-slate-300 rounded transition-colors"
+              >
+                Clear Dates
+              </button>
+            )}
           </div>
         </div>
 

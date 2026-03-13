@@ -91,6 +91,12 @@ export default function ComplaintPage() {
       return;
     }
 
+    // Location is required
+    if (!form.latitude || !form.longitude) {
+      setError('Current location is required. Please click "Use Current Location" to capture your GPS coordinates.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -99,8 +105,8 @@ export default function ComplaintPage() {
       fd.append('phone', form.phone.trim());
       fd.append('issue_type', form.issue_type);
       fd.append('description', form.description.trim());
-      if (form.latitude) fd.append('latitude', form.latitude);
-      if (form.longitude) fd.append('longitude', form.longitude);
+      fd.append('latitude', form.latitude);
+      fd.append('longitude', form.longitude);
       fd.append('website', form.website); // honeypot field
       images.forEach((img) => fd.append('images', img));
 
@@ -275,7 +281,7 @@ export default function ComplaintPage() {
             {/* Location */}
             <fieldset className="space-y-4">
               <legend className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-                Location (Optional)
+                Current Location <span className="text-red-500 normal-case">*</span>
               </legend>
 
               <button

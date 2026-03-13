@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { ComplaintWithImages } from '@/types';
-import { getMarkerColor, getStatusColor } from '@/lib/utils';
+import { getMarkerColor, getStatusColor, formatDate } from '@/lib/utils';
 
 interface LiveMapProps {
   complaints: ComplaintWithImages[];
@@ -124,6 +124,7 @@ function addMarkers(L: any, map: any, complaints: ComplaintWithImages[]) {
         <p style="font-weight:700;margin:0 0 4px">${c.complaint_id}</p>
         <p style="margin:2px 0"><strong>Type:</strong> ${c.issue_type}</p>
         <p style="margin:2px 0"><strong>Description:</strong> ${c.description.slice(0, 80)}${c.description.length > 80 ? '…' : ''}</p>
+        <p style="margin:2px 0"><strong>Registered:</strong> ${formatDate(c.created_at)}</p>
         <p style="margin:4px 0 0">
           <span style="
             display:inline-block;padding:2px 8px;border-radius:9999px;
