@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import type { Complaint } from '@/types';
+import type { ComplaintWithImages } from '@/types';
 import { getStatusColor, getMarkerColor } from '@/lib/utils';
 
 // Load LiveMap dynamically to avoid SSR Leaflet errors
@@ -13,8 +13,8 @@ const STATUS_OPTIONS = ['All', 'Pending', 'In Progress', 'Resolved'];
 const ISSUE_TYPES = ['All', 'Robbery', 'Murder', 'Assault', 'Theft', 'Harassment', 'Missing Person', 'Other'];
 
 export default function MapPage() {
-  const [complaints, setComplaints] = useState<Complaint[]>([]);
-  const [filtered, setFiltered] = useState<Complaint[]>([]);
+  const [complaints, setComplaints] = useState<ComplaintWithImages[]>([]);
+  const [filtered, setFiltered] = useState<ComplaintWithImages[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -36,7 +36,7 @@ export default function MapPage() {
 
   async function fetchComplaints() {
     try {
-      const res = await fetch('/api/complaints');
+      const res = await fetch('/api/complaints?include_images=true');
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setComplaints(data.complaints ?? []);

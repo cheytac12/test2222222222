@@ -2,6 +2,35 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { generateComplaintId } from '@/lib/utils';
 
+// ─── In-memory IP rate limiter ─────────────────────────────────────────────
+// Allows up to MAX_REQUESTS per IP within WINDOW_MS milliseconds.
+const WINDOW_MS = 60 * 1000; // 1 minute
+const MAX_REQUESTS = 5;
+
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitStore.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitStore.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    return false;
+  }
+
+  if (entry.count >= MAX_REQUESTS) {
+    return true;
+  }
+
+  entry.count += 1;
+  return false;
+}
+
 // ─── GET /api/complaints ───────────────────────────────────────────────────
 // Returns all complaints (used by map dashboard and admin panel)
 export async function GET(request: NextRequest) {
@@ -9,15 +38,22 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status');
   const issueType = searchParams.get('issue_type');
   const search = searchParams.get('search'); // search by complaint_id
+  const dateFrom = searchParams.get('date_from'); // ISO date string
+  const dateTo = searchParams.get('date_to'); // ISO date string
+  const includeImages = searchParams.get('include_images') !== 'false';
+
+  const selectClause = includeImages ? '*, complaint_images(*)' : '*';
 
   let query = supabaseAdmin
     .from('complaints')
-    .select('*')
+    .select(selectClause)
     .order('created_at', { ascending: false });
 
   if (status) query = query.eq('status', status);
   if (issueType) query = query.eq('issue_type', issueType);
   if (search) query = query.ilike('complaint_id', `%${search}%`);
+  if (dateFrom) query = query.gte('created_at', dateFrom);
+  if (dateTo) query = query.lte('created_at', dateTo);
 
   const { data, error } = await query;
 
@@ -33,7 +69,28 @@ export async function GET(request: NextRequest) {
 // Creates a new complaint. Expects multipart/form-data with optional images.
 export async function POST(request: NextRequest) {
   try {
+    // ── Rate limiting ──────────────────────────────────────────────────────
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
+      request.headers.get('x-real-ip') ??
+      'unknown';
+
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: 'Too many submissions. Please wait a minute before trying again.' },
+        { status: 429 }
+      );
+    }
+
     const formData = await request.formData();
+
+    // ── Honeypot check ─────────────────────────────────────────────────────
+    // If the hidden honeypot field is filled, this is likely a bot
+    const honeypot = formData.get('website') as string | null;
+    if (honeypot && honeypot.trim() !== '') {
+    // Return a fake success with a realistic-looking ID to avoid detection
+    return NextResponse.json({ success: true, complaint_id: generateComplaintId() }, { status: 201 });
+    }
 
     const name = formData.get('name') as string;
     const phone = formData.get('phone') as string;

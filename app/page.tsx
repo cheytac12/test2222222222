@@ -109,24 +109,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Issue types */}
-        <section className="py-14 px-6 bg-white">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-6">
-              Accepted Complaint Types
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {['Robbery', 'Murder', 'Assault', 'Theft', 'Harassment', 'Missing Person', 'Other'].map((t) => (
-                <span
-                  key={t}
-                  className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded text-xs font-medium border border-slate-200"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}
