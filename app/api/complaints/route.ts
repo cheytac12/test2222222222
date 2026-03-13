@@ -1,20 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { generateComplaintId } from '@/lib/utils';
-import nodemailer from 'nodemailer';
-
-// ─── Email transporter (created once, reused across requests) ─────────────
-let emailTransporter: ReturnType<typeof nodemailer.createTransport> | null = null;
-
-function getEmailTransporter() {
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_APP_PASSWORD;
-  if (!user || !pass) return null;
-  if (!emailTransporter) {
-    emailTransporter = nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
-  }
-  return emailTransporter;
-}
+import { sendStatusEmail } from '@/lib/email';
 
 // ─── In-memory IP rate limiter ─────────────────────────────────────────────
 // Allows up to MAX_REQUESTS per IP within WINDOW_MS milliseconds.
@@ -216,8 +203,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Send email confirmation via Nodemailer (best-effort, don't fail if email fails)
-    await sendEmailConfirmation(email, complaint_id);
+    // Send email confirmation (best-effort, don't fail if email fails)
+    await sendStatusEmail(email, complaint_id, 'Registered');
 
     return NextResponse.json({ success: true, complaint_id }, { status: 201 });
   } catch (err) {
@@ -226,26 +213,4 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// ─── Email Helper ────────────────────────────────────────────────────────────
-async function sendEmailConfirmation(to: string, complaintId: string) {
-  const transporter = getEmailTransporter();
-  if (!transporter) {
-    console.warn('Gmail credentials not configured; skipping email.');
-    return;
-  }
 
-  const user = process.env.GMAIL_USER;
-  try {
-    await transporter.sendMail({
-      from: `"Crime Report Portal" <${user}>`,
-      to,
-      subject: `Complaint Registered – ID: ${complaintId}`,
-      text: `Your complaint has been successfully registered.\n\nComplaint ID: ${complaintId}\n\nUse this ID to track the status on our platform.`,
-      html: `<p>Your complaint has been successfully registered.</p><p><strong>Complaint ID:</strong> ${complaintId}</p><p>Use this ID to track the status on our platform.</p>`,
-    });
-
-    console.log(`Email sent to ${to} for complaint ${complaintId}`);
-  } catch (emailErr) {
-    console.error('Email send error (non-fatal):', emailErr);
-  }
-}
