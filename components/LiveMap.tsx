@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import type { Complaint } from '@/types';
+import type { ComplaintWithImages } from '@/types';
 import { getMarkerColor, getStatusColor } from '@/lib/utils';
 
 interface LiveMapProps {
-  complaints: Complaint[];
+  complaints: ComplaintWithImages[];
   height?: string;
 }
 
@@ -78,12 +78,11 @@ export default function LiveMap({ complaints, height = '600px' }: LiveMapProps) 
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function addMarkers(L: any, map: any, complaints: Complaint[]) {
+function addMarkers(L: any, map: any, complaints: ComplaintWithImages[]) {
   complaints.forEach((c) => {
     if (c.latitude == null || c.longitude == null) return;
 
     const color = getMarkerColor(c.status);
-    const statusCss = getStatusColor(c.status);
 
     // Custom colored circle marker
     const icon = L.divIcon({
@@ -101,8 +100,27 @@ function addMarkers(L: any, map: any, complaints: Complaint[]) {
 
     const marker = L.marker([c.latitude, c.longitude], { icon }).addTo(map);
 
+    // Build images HTML if there are any
+    const images = c.complaint_images ?? [];
+    const imagesHtml =
+      images.length > 0
+        ? `<div style="margin-top:8px">
+            <p style="font-size:11px;color:#6b7280;margin:0 0 4px;font-weight:600">IMAGES (${images.length})</p>
+            <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:2px">
+              ${images
+                .map(
+                  (img) =>
+                    `<img src="${img.public_url}" alt="complaint image"
+                      style="width:72px;height:72px;object-fit:cover;border-radius:4px;border:1px solid #e2e8f0;flex-shrink:0"
+                      onerror="this.style.display='none'" />`
+                )
+                .join('')}
+            </div>
+          </div>`
+        : '';
+
     marker.bindPopup(`
-      <div style="min-width:180px;font-family:sans-serif;font-size:13px">
+      <div style="min-width:200px;max-width:280px;font-family:sans-serif;font-size:13px">
         <p style="font-weight:700;margin:0 0 4px">${c.complaint_id}</p>
         <p style="margin:2px 0"><strong>Type:</strong> ${c.issue_type}</p>
         <p style="margin:2px 0"><strong>Description:</strong> ${c.description.slice(0, 80)}${c.description.length > 80 ? '…' : ''}</p>
@@ -114,6 +132,7 @@ function addMarkers(L: any, map: any, complaints: Complaint[]) {
             ${c.status}
           </span>
         </p>
+        ${imagesHtml}
       </div>
     `);
   });

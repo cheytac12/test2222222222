@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import type { Complaint } from '@/types';
+import type { ComplaintWithImages } from '@/types';
 import { getStatusColor, getMarkerColor } from '@/lib/utils';
 
 // Load LiveMap dynamically to avoid SSR Leaflet errors
 const LiveMap = dynamic(() => import('@/components/LiveMap'), { ssr: false });
 
 export default function AdminMapPage() {
-  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [complaints, setComplaints] = useState<ComplaintWithImages[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -20,7 +20,7 @@ export default function AdminMapPage() {
 
   async function fetchComplaints() {
     try {
-      const res = await fetch('/api/complaints');
+      const res = await fetch('/api/complaints?include_images=true');
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setComplaints(data.complaints ?? []);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { jwtVerify } from 'jose';
 import { supabaseAdmin } from '@/lib/supabase-server';
 
 // ─── GET /api/complaints/[id] ──────────────────────────────────────────────
@@ -36,10 +37,21 @@ export async function PATCH(
 ) {
   const { id } = await params;
 
-  // Validate admin session token from httpOnly cookie
+  // Validate admin session JWT from httpOnly cookie
   const cookieStore = await cookies();
   const token = cookieStore.get('admin_session')?.value ?? null;
-  if (!token || token !== process.env.ADMIN_SESSION_SECRET) {
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret || jwtSecret.length < 32) {
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+  }
+
+  try {
+    await jwtVerify(token, new TextEncoder().encode(jwtSecret));
+  } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

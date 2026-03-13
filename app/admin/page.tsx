@@ -112,6 +112,9 @@ export default function AdminDashboardPage() {
           <Link href="/admin/map" className="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded transition-colors">
             View Map
           </Link>
+          <Link href="/admin/analytics" className="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded transition-colors">
+            Analytics
+          </Link>
           <button
             onClick={handleLogout}
             className="bg-red-700 hover:bg-red-600 px-3 py-1.5 rounded transition-colors"

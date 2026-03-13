@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'admin123';
-const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET ?? '';
-const ADMIN_PHONE = process.env.ADMIN_PHONE ?? '+1234567890';
+import { compare } from 'bcryptjs';
+import { SignJWT } from 'jose';
+import { supabaseAdmin } from '@/lib/supabase-server';
 
 // ─── POST /api/admin/login ─────────────────────────────────────────────────
-// Validates admin credentials and sets a session cookie
+// Validates admin credentials against the database and sets a signed JWT cookie
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const { phone, password } = body as { phone?: string; password?: string };
@@ -18,21 +17,46 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Constant-time comparison to avoid timing attacks
-  const phoneMatch = phone === ADMIN_PHONE;
-  const passMatch = password === ADMIN_PASSWORD;
+  // Fetch admin record by phone number
+  const { data: admin, error: dbError } = await supabaseAdmin
+    .from('admins')
+    .select('id, name, phone, password_hash, role')
+    .eq('phone', phone)
+    .single();
 
-  if (!phoneMatch || !passMatch) {
+  if (dbError || !admin) {
+    // Use a generic message to avoid leaking which field was wrong
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
-  // Create a simple signed session token
-  // In production, use a proper JWT or Supabase Auth
-  const sessionToken = SESSION_SECRET;
+  // Securely verify password against stored bcrypt hash
+  const passwordValid = await compare(password, admin.password_hash);
+  if (!passwordValid) {
+    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+  }
+
+  // Generate a signed JWT
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret || jwtSecret.length < 32) {
+    console.error('JWT_SECRET is not set or is too short (min 32 chars)');
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+  }
+
+  const secret = new TextEncoder().encode(jwtSecret);
+  const token = await new SignJWT({
+    sub: admin.id,
+    phone: admin.phone,
+    name: admin.name,
+    role: admin.role,
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('8h')
+    .sign(secret);
 
   // Set an httpOnly session cookie (secure in production)
   const cookieStore = await cookies();
-  cookieStore.set('admin_session', sessionToken, {
+  cookieStore.set('admin_session', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

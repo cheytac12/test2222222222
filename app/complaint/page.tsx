@@ -25,6 +25,7 @@ export default function ComplaintPage() {
     description: '',
     latitude: '',
     longitude: '',
+    website: '', // honeypot – must remain empty
   });
 
   const [images, setImages] = useState<File[]>([]);
@@ -100,6 +101,7 @@ export default function ComplaintPage() {
       fd.append('description', form.description.trim());
       if (form.latitude) fd.append('latitude', form.latitude);
       if (form.longitude) fd.append('longitude', form.longitude);
+      fd.append('website', form.website); // honeypot field
       images.forEach((img) => fd.append('images', img));
 
       const res = await fetch('/api/complaints', { method: 'POST', body: fd });
@@ -382,6 +384,20 @@ export default function ComplaintPage() {
                 </div>
               )}
             </fieldset>
+
+            {/* Honeypot – hidden from real users, catches bots */}
+            <div aria-hidden="true" style={{ display: 'none' }}>
+              <label htmlFor="website">Website</label>
+              <input
+                id="website"
+                name="website"
+                type="text"
+                value={form.website}
+                onChange={handleChange}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
 
             {/* Submit */}
             <button
