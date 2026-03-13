@@ -4,13 +4,18 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { ComplaintWithImages } from '@/types';
-import { getStatusColor, getMarkerColor } from '@/lib/utils';
+import { getMarkerColor } from '@/lib/utils';
 
-// Load LiveMap dynamically to avoid SSR Leaflet errors
 const LiveMap = dynamic(() => import('@/components/LiveMap'), { ssr: false });
 
 const STATUS_OPTIONS = ['All', 'Pending', 'In Progress', 'Resolved'];
 const ISSUE_TYPES = ['All', 'Robbery', 'Murder', 'Assault', 'Theft', 'Harassment', 'Missing Person', 'Other'];
+
+const STATUS_BADGE: Record<string, string> = {
+  Pending: 'bg-amber-50 text-amber-700 border-amber-200',
+  'In Progress': 'bg-blue-50 text-blue-700 border-blue-200',
+  Resolved: 'bg-green-50 text-green-700 border-green-200',
+};
 
 export default function MapPage() {
   const [complaints, setComplaints] = useState<ComplaintWithImages[]>([]);
@@ -24,7 +29,6 @@ export default function MapPage() {
 
   useEffect(() => {
     fetchComplaints();
-    // Auto-refresh every 30 seconds
     const interval = setInterval(fetchComplaints, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -62,30 +66,26 @@ export default function MapPage() {
     resolved: complaints.filter((c) => c.status === 'Resolved').length,
   };
 
-  const hasDateFilter = !!(dateFrom || dateTo);
-
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-[#F7F7F5] flex flex-col">
       {/* Header */}
-      <header className="bg-slate-950 text-white px-6 py-0 flex-shrink-0">
+      <header className="bg-white border-b border-gray-200 px-6 py-0 flex-shrink-0">
         <div className="max-w-none flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-slate-400 hover:text-white transition-colors text-sm flex items-center gap-1.5">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <Link href="/" className="text-gray-400 hover:text-gray-900 transition-colors text-xs flex items-center gap-1.5 uppercase tracking-wide">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
               </svg>
               Home
             </Link>
-            <svg className="w-3.5 h-3.5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-            <h1 className="text-sm font-semibold text-slate-200">Live Crime Map</h1>
+            <span className="text-gray-300">/</span>
+            <h1 className="text-xs font-bold text-gray-900 uppercase tracking-wide">Live Crime Map</h1>
           </div>
           <button
             onClick={() => { setLoading(true); fetchComplaints(); }}
-            className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-slate-300 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+            className="text-xs border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white text-gray-600 px-3 py-1.5 rounded-sm transition-all flex items-center gap-1.5 uppercase tracking-wide"
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
             </svg>
             Refresh
@@ -95,62 +95,79 @@ export default function MapPage() {
 
       <main className="flex-1 flex flex-col min-h-0">
         {/* Stats & Filter Bar */}
-        <div className="bg-white border-b border-slate-200 px-6 py-3 flex-shrink-0">
+        <div className="bg-white border-b border-gray-200 px-6 py-3 flex-shrink-0">
           <div className="flex flex-wrap items-center justify-between gap-3">
             {/* Stats */}
-            <div className="flex gap-2 flex-wrap">
-              <StatBadge label="Total" value={stats.total} color="bg-slate-100 text-slate-700 border border-slate-200" />
-              <StatBadge label="Pending" value={stats.pending} color="bg-amber-50 text-amber-700 border border-amber-200" />
-              <StatBadge label="In Progress" value={stats.inProgress} color="bg-blue-50 text-blue-700 border border-blue-200" />
-              <StatBadge label="Resolved" value={stats.resolved} color="bg-emerald-50 text-emerald-700 border border-emerald-200" />
+            <div className="flex gap-2 flex-wrap items-center">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Total</span>
+                <span className="text-sm font-bold text-gray-900">{stats.total}</span>
+              </div>
+              <div className="w-px h-4 bg-gray-200" />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium border rounded-sm bg-amber-50 text-amber-700 border-amber-200">
+                Pending <strong>{stats.pending}</strong>
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium border rounded-sm bg-blue-50 text-blue-700 border-blue-200">
+                In Progress <strong>{stats.inProgress}</strong>
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium border rounded-sm bg-green-50 text-green-700 border-green-200">
+                Resolved <strong>{stats.resolved}</strong>
+              </span>
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap gap-2 items-center">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-slate-300 rounded-lg px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700"
-              >
+            <div className="flex flex-wrap gap-1.5 items-center">
+              {/* Status toggle group */}
+              <div className="flex border border-gray-200 rounded-sm overflow-hidden">
                 {STATUS_OPTIONS.map((s) => (
-                  <option key={s}>{s}</option>
+                  <button
+                    key={s}
+                    onClick={() => setStatusFilter(s)}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors uppercase tracking-wide border-r border-gray-200 last:border-r-0 ${
+                      statusFilter === s
+                        ? 'bg-gray-900 text-white'
+                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {s}
+                  </button>
                 ))}
-              </select>
+              </div>
+
+              {/* Type select */}
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="border border-slate-300 rounded-lg px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700"
+                className="border border-gray-200 rounded-sm px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 text-gray-700 uppercase tracking-wide"
               >
-                {ISSUE_TYPES.map((t) => (
-                  <option key={t}>{t}</option>
-                ))}
+                {ISSUE_TYPES.map((t) => <option key={t}>{t}</option>)}
               </select>
+
+              {/* Date range */}
               <div className="flex items-center gap-1.5">
-                <label htmlFor="map-date-from" className="text-xs text-slate-500 font-medium">From</label>
+                <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">From</label>
                 <input
-                  id="map-date-from"
                   type="date"
                   value={dateFrom}
                   onChange={(e) => setDateFrom(e.target.value)}
-                  className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700"
+                  className="border border-gray-200 rounded-sm px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 text-gray-700"
                 />
               </div>
               <div className="flex items-center gap-1.5">
-                <label htmlFor="map-date-to" className="text-xs text-slate-500 font-medium">To</label>
+                <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">To</label>
                 <input
-                  id="map-date-to"
                   type="date"
                   value={dateTo}
                   onChange={(e) => setDateTo(e.target.value)}
-                  className="border border-slate-300 rounded-lg px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700"
+                  className="border border-gray-200 rounded-sm px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 text-gray-700"
                 />
               </div>
-              {hasDateFilter && (
+              {(dateFrom || dateTo) && (
                 <button
                   onClick={() => { setDateFrom(''); setDateTo(''); }}
-                  className="text-xs text-slate-500 hover:text-slate-700 px-2 py-1.5 border border-slate-300 rounded-lg transition-colors hover:bg-slate-50"
+                  className="text-xs text-gray-500 hover:text-gray-900 px-2 py-1.5 border border-gray-200 rounded-sm transition-colors"
                 >
-                  Clear Dates
+                  Clear
                 </button>
               )}
             </div>
@@ -169,10 +186,10 @@ export default function MapPage() {
         {/* Map */}
         <div className="flex-1 relative">
           {loading ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+            <div className="absolute inset-0 flex items-center justify-center bg-[#F7F7F5]">
               <div className="text-center">
-                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-sm text-slate-500">Loading map data…</p>
+                <div className="w-6 h-6 border-2 border-gray-900 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-xs font-mono uppercase tracking-widest text-gray-400">Loading map data…</p>
               </div>
             </div>
           ) : (
@@ -183,36 +200,21 @@ export default function MapPage() {
         </div>
 
         {/* Legend */}
-        <div className="bg-white border-t border-slate-200 px-6 py-3 flex flex-wrap gap-4 items-center text-xs flex-shrink-0">
-          <span className="text-slate-500 font-semibold">Legend:</span>
-          {[
-            { status: 'Pending', label: 'Pending' },
-            { status: 'In Progress', label: 'In Progress' },
-            { status: 'Resolved', label: 'Resolved' },
-          ].map(({ status, label }) => (
+        <div className="bg-white border-t border-gray-200 px-6 py-3 flex flex-wrap gap-4 items-center flex-shrink-0">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Legend</span>
+          {['Pending', 'In Progress', 'Resolved'].map((status) => (
             <div key={status} className="flex items-center gap-1.5">
-              <div
-                className="w-2.5 h-2.5 rounded-full shadow-sm"
-                style={{ backgroundColor: getMarkerColor(status) }}
-              />
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
-                {label}
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getMarkerColor(status) }} />
+              <span className={`px-2 py-0.5 rounded-sm text-xs font-medium border ${STATUS_BADGE[status] ?? 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                {status}
               </span>
             </div>
           ))}
-          <span className="ml-auto text-slate-400">
+          <span className="ml-auto text-[10px] font-mono text-gray-400">
             Showing {filtered.length} of {complaints.length} · Auto-refreshes every 30s
           </span>
         </div>
       </main>
-    </div>
-  );
-}
-
-function StatBadge({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <div className={`${color} px-2.5 py-1 rounded-lg font-medium text-xs`}>
-      {label}: <span className="font-bold">{value}</span>
     </div>
   );
 }
