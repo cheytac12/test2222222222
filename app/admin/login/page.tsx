@@ -47,18 +47,17 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden">
         {/* Header */}
-        <div className="bg-slate-800 text-white px-6 py-5 text-center">
-          <div className="text-3xl mb-2">🔐</div>
-          <h1 className="text-xl font-bold">Admin Login</h1>
-          <p className="text-slate-400 text-sm mt-1">CrimeReport Administration Panel</p>
+        <div className="bg-slate-800 text-white px-6 py-5">
+          <h1 className="text-base font-semibold">Admin Login</h1>
+          <p className="text-slate-400 text-xs mt-1">CrimeReport Administration Panel</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {error && (
-            <div className="bg-red-50 border border-red-300 text-red-700 rounded-lg px-4 py-3 text-sm">
-              ⚠️ {error}
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded px-4 py-3 text-sm">
+              {error}
             </div>
           )}
 
@@ -75,7 +74,7 @@ export default function AdminLoginPage() {
               placeholder="+1234567890"
               required
               autoComplete="username"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -92,21 +91,24 @@ export default function AdminLoginPage() {
               placeholder="••••••••"
               required
               autoComplete="current-password"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-slate-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+            className="w-full bg-slate-800 hover:bg-slate-700 text-white px-6 py-2.5 rounded font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {loading ? '⏳ Signing in…' : 'Sign In'}
+            {loading ? (
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : null}
+            Sign In
           </button>
         </form>
 
         <div className="px-6 pb-5 text-center">
-          <Link href="/" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
+          <Link href="/" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
             ← Back to Home
           </Link>
         </div>

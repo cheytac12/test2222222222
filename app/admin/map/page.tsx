@@ -36,28 +36,28 @@ export default function AdminMapPage() {
       {/* Header */}
       <header className="bg-slate-800 text-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin" className="text-slate-300 hover:text-white transition-colors text-sm">
+          <Link href="/admin" className="text-slate-400 hover:text-white transition-colors text-sm">
             ← Dashboard
           </Link>
-          <span className="text-slate-600">|</span>
-          <h1 className="text-lg font-bold">🗺️ Crime Map View</h1>
+          <span className="text-slate-700">|</span>
+          <h1 className="text-sm font-semibold">Crime Map View</h1>
         </div>
-        <div className="flex items-center gap-3 text-sm">
+        <div className="flex items-center gap-3 text-xs">
           <span className="text-slate-400">
             {complaints.length} complaint{complaints.length !== 1 ? 's' : ''} on map
           </span>
           <button
             onClick={() => { setLoading(true); fetchComplaints(); }}
-            className="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg transition-colors"
+            className="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded transition-colors"
           >
-            🔄 Refresh
+            Refresh
           </button>
         </div>
       </header>
 
       {error && (
         <div className="bg-red-900 border-b border-red-700 text-red-200 px-6 py-3 text-sm">
-          ⚠️ {error}
+          {error}
         </div>
       )}
 
@@ -65,9 +65,9 @@ export default function AdminMapPage() {
       <div className="flex-1 p-4">
         {loading ? (
           <div className="h-full flex items-center justify-center">
-            <div className="text-center text-white">
-              <div className="text-4xl animate-pulse mb-3">🗺️</div>
-              <p className="text-slate-400">Loading map data…</p>
+            <div className="text-center">
+              <div className="w-8 h-8 border-2 border-slate-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm text-slate-400">Loading map data…</p>
             </div>
           </div>
         ) : (
@@ -76,7 +76,7 @@ export default function AdminMapPage() {
       </div>
 
       {/* Legend */}
-      <div className="bg-slate-800 border-t border-slate-700 px-6 py-3 flex flex-wrap gap-4 items-center text-sm">
+      <div className="bg-slate-800 border-t border-slate-700 px-6 py-3 flex flex-wrap gap-4 items-center text-xs">
         <span className="text-slate-400 font-medium">Legend:</span>
         {[
           { status: 'Pending', label: 'Pending' },
@@ -85,10 +85,10 @@ export default function AdminMapPage() {
         ].map(({ status, label }) => (
           <div key={status} className="flex items-center gap-1.5">
             <div
-              className="w-3 h-3 rounded-full border border-slate-600"
+              className="w-2.5 h-2.5 rounded-full border border-slate-600"
               style={{ backgroundColor: getMarkerColor(status) }}
             />
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium border ${getStatusColor(status)}`}>
               {label}
             </span>
           </div>

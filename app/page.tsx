@@ -4,62 +4,55 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Navigation */}
-      <nav className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between shadow-md">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🚨</span>
-          <span className="text-xl font-bold tracking-tight">CrimeReport</span>
-        </div>
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/complaint" className="hover:text-blue-300 transition-colors">
+      <nav className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+        <span className="text-lg font-semibold tracking-tight">CrimeReport</span>
+        <div className="flex items-center gap-6 text-sm">
+          <Link href="/complaint" className="text-slate-300 hover:text-white transition-colors">
             File Complaint
           </Link>
-          <Link href="/track" className="hover:text-blue-300 transition-colors">
+          <Link href="/track" className="text-slate-300 hover:text-white transition-colors">
             Track Complaint
           </Link>
-          <Link href="/map" className="hover:text-blue-300 transition-colors">
+          <Link href="/map" className="text-slate-300 hover:text-white transition-colors">
             Live Map
           </Link>
           <Link
             href="/admin/login"
-            className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg font-medium transition-colors"
+            className="border border-slate-600 hover:border-slate-400 hover:text-white text-slate-300 px-4 py-1.5 rounded font-medium transition-colors text-xs"
           >
-            Admin Login
+            Admin
           </Link>
         </div>
       </nav>
 
       {/* Hero Section */}
       <main className="flex-1">
-        <section className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 text-white py-24 px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="text-6xl mb-6">🚔</div>
-            <h1 className="text-5xl font-extrabold mb-6 leading-tight">
+        <section className="bg-slate-900 text-white py-24 px-6">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-xs font-semibold tracking-widest text-slate-400 uppercase mb-4">
+              Secure · Transparent · Real-time
+            </p>
+            <h1 className="text-5xl font-bold mb-6 leading-tight">
               Report Crime.
               <br />
               <span className="text-blue-400">Stay Safe.</span>
             </h1>
-            <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-              A secure, fast, and transparent platform for citizens to submit crime
-              complaints and track their resolution in real time.
+            <p className="text-lg text-slate-400 mb-10 max-w-xl leading-relaxed">
+              A secure platform for citizens to submit crime complaints and track
+              their resolution in real time.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href="/complaint"
-                className="bg-red-600 hover:bg-red-500 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg transition-all hover:scale-105"
+                className="bg-blue-600 hover:bg-blue-500 text-white px-7 py-3 rounded text-sm font-semibold transition-colors"
               >
-                📋 Register Complaint
-              </Link>
-              <Link
-                href="/map"
-                className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg transition-all hover:scale-105"
-              >
-                🗺️ View Live Map
+                Register Complaint
               </Link>
               <Link
                 href="/track"
-                className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl text-lg font-semibold shadow-lg transition-all hover:scale-105"
+                className="bg-transparent border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white px-7 py-3 rounded text-sm font-semibold transition-colors"
               >
-                🔍 Track Complaint
+                Track Complaint
               </Link>
             </div>
           </div>
@@ -67,33 +60,33 @@ export default function HomePage() {
 
         {/* Features */}
         <section className="py-20 px-6 bg-white">
-          <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-center text-slate-800 mb-12">How It Works</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-2xl font-bold text-slate-800 mb-10">How It Works</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 {
-                  icon: '📝',
-                  title: '1. Submit Your Complaint',
+                  step: '01',
+                  title: 'Submit Your Complaint',
                   desc: 'Fill out a simple form with your details, select the crime type, describe the incident, and optionally attach photos and your GPS location.',
                 },
                 {
-                  icon: '📱',
-                  title: '2. Get Instant Confirmation',
+                  step: '02',
+                  title: 'Get Instant Confirmation',
                   desc: 'Receive an SMS with your unique Complaint ID immediately after submission. Use it any time to check your case status.',
                 },
                 {
-                  icon: '✅',
-                  title: '3. Track Resolution',
-                  desc: 'Monitor your complaint\'s progress from Pending to In Progress to Resolved. Admins update the status as they act on your report.',
+                  step: '03',
+                  title: 'Track Resolution',
+                  desc: "Monitor your complaint's progress from Pending to In Progress to Resolved. Admins update the status as they act on your report.",
                 },
               ].map((f) => (
                 <div
-                  key={f.title}
-                  className="bg-slate-50 rounded-2xl p-8 border border-slate-200 text-center hover:shadow-lg transition-shadow"
+                  key={f.step}
+                  className="border border-slate-200 rounded-lg p-6 hover:shadow-sm transition-shadow"
                 >
-                  <div className="text-4xl mb-4">{f.icon}</div>
-                  <h3 className="text-xl font-semibold text-slate-800 mb-3">{f.title}</h3>
-                  <p className="text-slate-600 leading-relaxed">{f.desc}</p>
+                  <p className="text-xs font-bold text-blue-500 tracking-widest mb-3">{f.step}</p>
+                  <h3 className="text-base font-semibold text-slate-800 mb-2">{f.title}</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
                 </div>
               ))}
             </div>
@@ -101,31 +94,32 @@ export default function HomePage() {
         </section>
 
         {/* Trust badges */}
-        <section className="py-16 px-6 bg-slate-50">
+        <section className="py-14 px-6 bg-slate-50 border-y border-slate-200">
           <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             {[
-              { value: '🔒', label: 'Secure & Private', sub: 'All data encrypted via Supabase' },
-              { value: '📍', label: 'GPS-Enabled', sub: 'Precise crime location mapping' },
-              { value: '⚡', label: 'Real-Time Updates', sub: 'Live map and instant SMS alerts' },
+              { label: 'Secure & Private', sub: 'All data encrypted via Supabase' },
+              { label: 'GPS-Enabled', sub: 'Precise crime location mapping' },
+              { label: 'Real-Time Updates', sub: 'Live map and instant SMS alerts' },
             ].map((s) => (
-              <div key={s.label} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                <div className="text-3xl mb-2">{s.value}</div>
-                <div className="text-lg font-bold text-slate-800">{s.label}</div>
-                <div className="text-sm text-slate-500 mt-1">{s.sub}</div>
+              <div key={s.label} className="py-2">
+                <div className="text-sm font-semibold text-slate-800">{s.label}</div>
+                <div className="text-xs text-slate-400 mt-1">{s.sub}</div>
               </div>
             ))}
           </div>
         </section>
 
         {/* Issue types */}
-        <section className="py-16 px-6 bg-white">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl font-bold text-slate-800 mb-8">Types of Complaints Accepted</h2>
-            <div className="flex flex-wrap justify-center gap-3">
+        <section className="py-14 px-6 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-6">
+              Accepted Complaint Types
+            </h2>
+            <div className="flex flex-wrap gap-2">
               {['Robbery', 'Murder', 'Assault', 'Theft', 'Harassment', 'Missing Person', 'Other'].map((t) => (
                 <span
                   key={t}
-                  className="bg-slate-100 text-slate-700 px-4 py-2 rounded-full text-sm font-medium border border-slate-200"
+                  className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded text-xs font-medium border border-slate-200"
                 >
                   {t}
                 </span>
@@ -136,7 +130,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-8 px-6 text-center text-sm">
+      <footer className="bg-slate-900 text-slate-500 py-6 px-6 text-center text-xs">
         <p>© {new Date().getFullYear()} CrimeReport Platform. All rights reserved.</p>
         <p className="mt-1">For emergencies, always call your local emergency number (e.g., 911).</p>
       </footer>

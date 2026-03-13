@@ -113,20 +113,14 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-slate-100">
       {/* Top Nav */}
       <nav className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-xl">🛡️</span>
-          <span className="text-lg font-bold">Admin Dashboard</span>
-        </div>
-        <div className="flex items-center gap-3 text-sm">
-          <Link href="/admin/map" className="bg-blue-700 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-colors">
-            🗺️ View Map
-          </Link>
-          <Link href="/map" target="_blank" className="text-slate-300 hover:text-white transition-colors">
-            Public Map ↗
+        <span className="text-sm font-semibold">Admin Dashboard</span>
+        <div className="flex items-center gap-3 text-xs">
+          <Link href="/admin/map" className="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded transition-colors">
+            View Map
           </Link>
           <button
             onClick={handleLogout}
-            className="bg-red-700 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors"
+            className="bg-red-700 hover:bg-red-600 px-3 py-1.5 rounded transition-colors"
           >
             Logout
           </button>
@@ -142,27 +136,27 @@ export default function AdminDashboardPage() {
             { label: 'In Progress', value: stats.inProgress, color: 'bg-blue-600' },
             { label: 'Resolved', value: stats.resolved, color: 'bg-green-600' },
           ].map((s) => (
-            <div key={s.label} className={`${s.color} text-white rounded-xl px-5 py-4 shadow`}>
-              <p className="text-sm opacity-80">{s.label}</p>
+            <div key={s.label} className={`${s.color} text-white rounded-lg px-5 py-4 shadow-sm`}>
+              <p className="text-xs opacity-80">{s.label}</p>
               <p className="text-3xl font-bold mt-1">{s.value}</p>
             </div>
           ))}
         </div>
 
         {/* Filters / Search */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow p-4 mb-6 flex flex-wrap gap-3 items-center">
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 mb-6 flex flex-wrap gap-3 items-center">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && fetchComplaints()}
             placeholder="Search by Complaint ID…"
-            className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-52"
+            className="border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-52"
           />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-slate-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {STATUS_OPTIONS.map((s) => (
               <option key={s}>{s}</option>
@@ -171,7 +165,7 @@ export default function AdminDashboardPage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-slate-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {ISSUE_TYPES.map((t) => (
               <option key={t}>{t}</option>
@@ -179,9 +173,9 @@ export default function AdminDashboardPage() {
           </select>
           <button
             onClick={fetchComplaints}
-            className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors"
           >
-            🔍 Search
+            Search
           </button>
           <button
             onClick={() => { setSearch(''); setStatusFilter('All'); setTypeFilter('All'); }}
@@ -193,24 +187,23 @@ export default function AdminDashboardPage() {
 
         {/* Error */}
         {error && (
-          <div className="bg-red-50 border border-red-300 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">
-            ⚠️ {error}
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded px-4 py-3 mb-4 text-sm">
+            {error}
           </div>
         )}
 
         {/* Table */}
         {loading ? (
-          <div className="bg-white rounded-xl border border-slate-200 shadow p-12 text-center">
-            <div className="text-4xl animate-pulse mb-3">📋</div>
-            <p className="text-slate-500">Loading complaints…</p>
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-12 text-center">
+            <div className="w-8 h-8 border-2 border-slate-300 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-slate-500">Loading complaints…</p>
           </div>
         ) : complaints.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 shadow p-12 text-center">
-            <div className="text-4xl mb-3">📭</div>
-            <p className="text-slate-500">No complaints found matching your filters.</p>
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-12 text-center">
+            <p className="text-sm text-slate-500">No complaints found matching your filters.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-slate-200 shadow overflow-hidden">
+          <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50">
@@ -236,7 +229,7 @@ export default function AdminDashboardPage() {
                       <td className="px-4 py-3 whitespace-nowrap">{c.name}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-slate-500">{c.phone}</td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium">
                           {c.issue_type}
                         </span>
                       </td>
@@ -249,7 +242,7 @@ export default function AdminDashboardPage() {
                           : '—'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${getStatusColor(c.status)}`}>
+                        <span className={`px-2 py-1 rounded text-xs font-semibold border ${getStatusColor(c.status)}`}>
                           {c.status}
                         </span>
                       </td>
@@ -264,7 +257,7 @@ export default function AdminDashboardPage() {
                             setUpdateNotes('');
                             setUpdateError('');
                           }}
-                          className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                          className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
                         >
                           Update Status
                         </button>
@@ -281,14 +274,14 @@ export default function AdminDashboardPage() {
       {/* Status Update Modal */}
       {updating && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-base font-semibold text-slate-800 mb-4">
               Update Status — <span className="font-mono text-blue-600">{updating}</span>
             </h3>
 
             {updateError && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
-                ⚠️ {updateError}
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">
+                {updateError}
               </p>
             )}
 
@@ -298,7 +291,7 @@ export default function AdminDashboardPage() {
                 <select
                   value={updateStatus}
                   onChange={(e) => setUpdateStatus(e.target.value)}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-slate-300 rounded px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {VALID_STATUSES.map((s) => (
                     <option key={s}>{s}</option>
@@ -315,7 +308,7 @@ export default function AdminDashboardPage() {
                   onChange={(e) => setUpdateNotes(e.target.value)}
                   rows={3}
                   placeholder="Add notes about this status change…"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full border border-slate-300 rounded px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
             </div>
@@ -324,13 +317,16 @@ export default function AdminDashboardPage() {
               <button
                 onClick={submitStatusUpdate}
                 disabled={updateLoading}
-                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold text-sm transition-colors disabled:opacity-50"
+                className="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {updateLoading ? '⏳ Saving…' : '✅ Save Changes'}
+                {updateLoading ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : null}
+                Save Changes
               </button>
               <button
                 onClick={() => setUpdating(null)}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-lg font-semibold text-sm transition-colors"
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded font-semibold text-sm transition-colors"
               >
                 Cancel
               </button>
