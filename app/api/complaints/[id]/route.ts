@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 import { supabaseAdmin } from '@/lib/supabase-server';
+import { sendStatusEmail } from '@/lib/email';
 
 // ─── GET /api/complaints/[id] ──────────────────────────────────────────────
 // Fetches a single complaint with its images by complaint_id (e.g. "CR-10294")
@@ -68,10 +69,10 @@ export async function PATCH(
     );
   }
 
-  // Get current status for the audit log
+  // Get current status and email for the audit log and notification
   const { data: existing } = await supabaseAdmin
     .from('complaints')
-    .select('status')
+    .select('status, email')
     .eq('complaint_id', id.toUpperCase())
     .single();
 
@@ -100,6 +101,11 @@ export async function PATCH(
     updated_by: 'admin',
     notes: notes ?? null,
   });
+
+  // Send email notification for relevant status changes
+  if ((status === 'In Progress' || status === 'Resolved') && existing.email) {
+    await sendStatusEmail(existing.email, id.toUpperCase(), status);
+  }
 
   return NextResponse.json({ success: true, complaint: updated });
 }
