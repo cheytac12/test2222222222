@@ -25,7 +25,8 @@ Browser (Next.js / React)
       ├── GET  /api/complaints          → List all (with filters)
       ├── GET  /api/complaints/[id]     → Get complaint + images by ID
       ├── PATCH /api/complaints/[id]    → Update status (admin)
-      ├── POST /api/admin/login         → Admin login → session cookie
+      ├── POST /api/admin/send-otp      → Send OTP to admin phone via Twilio
+      ├── POST /api/admin/login         → Verify OTP → session cookie
       └── POST /api/admin/logout        → Clear session cookie
 
 Supabase (PostgreSQL)
@@ -49,7 +50,7 @@ Twilio (SMS)
 | Frontend   | Next.js 16, React 19, TailwindCSS v4 |
 | Backend    | Next.js API Routes (App Router)      |
 | Database   | Supabase (PostgreSQL)                |
-| Auth       | Supabase Auth + httpOnly session cookie |
+| Auth       | Twilio OTP (direct API) + httpOnly session cookie |
 | Storage    | Supabase Storage                     |
 | Map        | Leaflet.js + react-leaflet           |
 | SMS        | Twilio API                           |
@@ -86,7 +87,8 @@ See [`database/schema.sql`](./database/schema.sql) for the full Supabase SQL sch
 │   └── api/
 │       ├── complaints/route.ts    # GET all / POST new complaint
 │       ├── complaints/[id]/route.ts # GET by ID / PATCH status
-│       ├── admin/login/route.ts   # Admin login endpoint
+│       ├── admin/login/route.ts   # Admin login endpoint (OTP verify)
+│       ├── admin/send-otp/route.ts # Send admin OTP via Twilio
 │       └── admin/logout/route.ts  # Admin logout endpoint
 ├── components/
 │   ├── LiveMap.tsx                # Leaflet map with color-coded markers
@@ -94,6 +96,8 @@ See [`database/schema.sql`](./database/schema.sql) for the full Supabase SQL sch
 ├── lib/
 │   ├── supabase.ts                # Supabase browser client
 │   ├── supabase-server.ts         # Supabase server client (service role)
+│   ├── twilio.ts                  # Twilio direct API client
+│   ├── otp-store.ts               # In-memory OTP storage
 │   └── utils.ts                   # Shared utilities
 ├── types/
 │   └── index.ts                   # TypeScript type definitions
@@ -145,14 +149,13 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-# Twilio SMS (optional – if not set, SMS step is skipped)
+# Twilio (required for SMS – used directly, NOT through Supabase)
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=your-twilio-auth-token
 TWILIO_PHONE_NUMBER=+1234567890
 
-# Admin credentials
+# Admin credentials (ADMIN_PHONE must match a number reachable via Twilio)
 ADMIN_PHONE=+1234567890
-ADMIN_PASSWORD=your-secure-admin-password
 ADMIN_SESSION_SECRET=a-random-secret-of-at-least-32-characters
 ```
 
@@ -198,11 +201,17 @@ npm run start
 5. **Environment variables** for secrets are excluded from version control.
 6. **Images** are uploaded through the server – no direct client-to-storage writes needed.
 7. **Input validation** on all API routes before database operations.
-8. **Twilio credentials** are only accessed server-side.
+8. **Twilio credentials** are only accessed server-side (direct API, not through Supabase).
+9. **Admin OTP** codes expire after 10 minutes and are consumed on first use (anti-replay).
+10. **Phone enumeration** is prevented: `/api/admin/send-otp` returns success regardless of whether the phone matches.
 
 ---
 
-## 📱 SMS Integration (Twilio)
+## 📱 SMS Integration (Twilio — Direct API)
+
+Twilio is integrated **directly via the Twilio SDK** (`twilio` npm package), bypassing Supabase's built-in phone auth (which has a 3-SMS limit on the free tier).
+
+### Complaint confirmation
 
 When a complaint is submitted:
 1. The server generates a unique `CR-XXXXX` complaint ID.
@@ -216,6 +225,14 @@ Use this ID to track the status on our platform.
 ```
 
 If Twilio credentials are not configured, the SMS step is silently skipped and the complaint is still saved.
+
+### Admin login OTP
+
+Admin authentication uses phone-based OTP via direct Twilio:
+1. Admin enters their phone number → `POST /api/admin/send-otp` generates a 6-digit code and sends it via Twilio.
+2. Admin enters the code → `POST /api/admin/login` verifies the code and issues an httpOnly session cookie.
+
+OTPs expire after **10 minutes** and are consumed on first use.
 
 ---
 

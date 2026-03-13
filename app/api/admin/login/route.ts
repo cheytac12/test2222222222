@@ -1,38 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { verifyAndConsumeOtp } from '@/lib/otp-store';
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'admin123';
 const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET ?? '';
 const ADMIN_PHONE = process.env.ADMIN_PHONE ?? '+1234567890';
 
 // ─── POST /api/admin/login ─────────────────────────────────────────────────
-// Validates admin credentials and sets a session cookie
+// Verifies the OTP sent via /api/admin/send-otp and sets a session cookie.
+// Twilio is used directly (not through Supabase) to send the OTP.
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { phone, password } = body as { phone?: string; password?: string };
+  const { phone, otp } = body as { phone?: string; otp?: string };
 
-  if (!phone || !password) {
+  if (!phone || !otp) {
     return NextResponse.json(
-      { error: 'Phone and password are required' },
+      { error: 'Phone number and OTP are required' },
       { status: 400 }
     );
   }
 
-  // Constant-time comparison to avoid timing attacks
-  const phoneMatch = phone === ADMIN_PHONE;
-  const passMatch = password === ADMIN_PASSWORD;
-
-  if (!phoneMatch || !passMatch) {
+  // Validate that the phone matches the configured admin number.
+  if (phone !== ADMIN_PHONE) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
-  // Create a simple signed session token
-  // In production, use a proper JWT or Supabase Auth
-  const sessionToken = SESSION_SECRET;
+  // Verify the OTP from the in-memory store (generated and sent via direct Twilio).
+  if (!verifyAndConsumeOtp(phone, otp)) {
+    return NextResponse.json({ error: 'Invalid or expired OTP' }, { status: 401 });
+  }
 
   // Set an httpOnly session cookie (secure in production)
   const cookieStore = await cookies();
-  cookieStore.set('admin_session', sessionToken, {
+  cookieStore.set('admin_session', SESSION_SECRET, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
