@@ -106,7 +106,7 @@ export default function MapHeatmap({ complaints, height = '550px' }: MapHeatmapP
       const col = Math.floor(c.longitude! / CELL);
       const key = `${row}_${col}`;
       if (!grid[key]) grid[key] = [];
-      grid[key].push(c.issue_type);
+      grid[key]!.push(c.issue_type);
     });
 
     Object.entries(grid).forEach(([key, types]) => {

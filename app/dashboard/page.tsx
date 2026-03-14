@@ -50,7 +50,7 @@ export default function CombinedDashboard() {
 
   async function fetchComplaints() {
     try {
-      const res = await fetch('/api/complaints?include_images=true');
+      const res = await fetch('/api/complaints?include_images=false');
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setComplaints(data.complaints ?? []);
