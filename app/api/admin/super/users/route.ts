@@ -13,7 +13,8 @@ interface AdminJwtPayload {
 /** Verify request is from a super admin.  Returns the payload or null. */
 async function verifySuperAdmin(jwtSecret: string): Promise<AdminJwtPayload | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get('admin_session')?.value ?? null;
+  // Super admins authenticate via their own dedicated session cookie
+  const token = cookieStore.get('super_admin_session')?.value ?? null;
   if (!token) return null;
 
   try {
