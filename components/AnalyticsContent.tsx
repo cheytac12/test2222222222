@@ -21,6 +21,111 @@ import type { ComplaintWithImages } from '@/types';
 const ISSUE_TYPES = ['All', 'Robbery', 'Murder', 'Assault', 'Theft', 'Harassment', 'Missing Person', 'Other'];
 const STATUS_OPTIONS = ['All', 'Pending', 'In Progress', 'Resolved'];
 
+// ── Indian States & Union Territories ────────────────────────────────────────
+const INDIAN_STATES = [
+  'All',
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Andaman & Nicobar Islands', 'Chandigarh', 'Dadra & Nagar Haveli',
+  'Daman & Diu', 'Delhi', 'Jammu & Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry',
+];
+
+// Approximate bounding boxes [south, west, north, east] for each state
+const STATE_BOUNDS: Record<string, [number, number, number, number]> = {
+  'Andhra Pradesh':          [12.6, 76.7, 19.9, 84.8],
+  'Arunachal Pradesh':       [26.6, 91.5, 29.5, 97.4],
+  'Assam':                   [24.1, 89.7, 27.9, 96.0],
+  'Bihar':                   [24.3, 83.3, 27.5, 88.2],
+  'Chhattisgarh':            [17.8, 80.2, 24.1, 84.4],
+  'Goa':                     [14.9, 73.7, 15.8, 74.4],
+  'Gujarat':                 [20.1, 68.1, 24.7, 74.5],
+  'Haryana':                 [27.7, 74.5, 30.9, 77.6],
+  'Himachal Pradesh':        [30.4, 75.6, 33.2, 79.0],
+  'Jharkhand':               [21.9, 83.3, 25.4, 87.9],
+  'Karnataka':               [11.6, 74.0, 18.5, 78.6],
+  'Kerala':                  [8.2,  76.2, 12.8, 77.4],
+  'Madhya Pradesh':          [21.1, 74.0, 26.9, 82.8],
+  'Maharashtra':             [15.6, 72.6, 22.1, 80.9],
+  'Manipur':                 [23.8, 93.0, 25.7, 94.8],
+  'Meghalaya':               [25.0, 89.8, 26.1, 92.8],
+  'Mizoram':                 [21.9, 92.2, 24.5, 93.5],
+  'Nagaland':                [25.2, 93.3, 27.1, 95.3],
+  'Odisha':                  [17.8, 81.4, 22.6, 87.5],
+  'Punjab':                  [29.5, 73.9, 32.5, 76.9],
+  'Rajasthan':               [23.1, 69.5, 30.2, 78.2],
+  'Sikkim':                  [27.1, 88.0, 28.1, 88.9],
+  'Tamil Nadu':              [8.1,  76.2, 13.6, 80.3],
+  'Telangana':               [15.8, 77.2, 19.9, 81.3],
+  'Tripura':                 [22.9, 91.2, 24.5, 92.3],
+  'Uttar Pradesh':           [23.9, 77.1, 30.4, 84.6],
+  'Uttarakhand':             [28.7, 77.6, 31.5, 81.1],
+  'West Bengal':             [21.5, 85.8, 27.2, 89.9],
+  'Andaman & Nicobar Islands': [6.7, 92.2, 13.7, 93.9],
+  'Chandigarh':              [30.6, 76.7, 30.8, 76.9],
+  'Dadra & Nagar Haveli':    [20.0, 72.9, 20.3, 73.2],
+  'Daman & Diu':             [20.4, 70.8, 20.5, 73.0],
+  'Delhi':                   [28.4, 76.8, 28.9, 77.4],
+  'Jammu & Kashmir':         [32.3, 73.8, 37.1, 80.4],
+  'Ladakh':                  [32.0, 75.0, 36.0, 80.5],
+  'Lakshadweep':             [8.3,  72.0,  12.7, 74.0],
+  'Puducherry':              [11.6, 79.6, 12.1, 80.2],
+};
+
+// ── Major Indian Cities ───────────────────────────────────────────────────────
+// [lat, lng]
+const CITY_COORDS: Record<string, [number, number]> = {
+  'Mumbai':        [19.076,  72.878],
+  'Delhi':         [28.614,  77.209],
+  'Bangalore':     [12.972,  77.595],
+  'Hyderabad':     [17.388,  78.474],
+  'Chennai':       [13.083,  80.270],
+  'Kolkata':       [22.573,  88.363],
+  'Pune':          [18.521,  73.857],
+  'Ahmedabad':     [23.023,  72.572],
+  'Surat':         [21.170,  72.831],
+  'Jaipur':        [26.912,  75.787],
+  'Lucknow':       [26.847,  80.947],
+  'Kanpur':        [26.449,  80.331],
+  'Nagpur':        [21.145,  79.089],
+  'Visakhapatnam': [17.686,  83.218],
+  'Indore':        [22.719,  75.857],
+  'Thane':         [19.218,  72.978],
+  'Bhopal':        [23.259,  77.413],
+  'Patna':         [25.598,  85.138],
+  'Vadodara':      [22.307,  73.180],
+  'Ghaziabad':     [28.670,  77.420],
+  'Coimbatore':    [11.017,  76.955],
+  'Kochi':         [9.931,   76.267],
+  'Chandigarh':    [30.734,  76.779],
+  'Guwahati':      [26.145,  91.745],
+  'Mysuru':        [12.296,  76.639],
+  'Ranchi':        [23.344,  85.310],
+};
+
+const CITY_RADIUS_DEG = 0.3; // ~33 km radius for city filtering
+
+/** Filter complaints within a state bounding box */
+function inState(c: ComplaintWithImages, state: string): boolean {
+  if (state === 'All' || c.latitude == null || c.longitude == null) return true;
+  const bounds = STATE_BOUNDS[state];
+  if (!bounds) return true;
+  const [s, w, n, e] = bounds;
+  return c.latitude >= s && c.latitude <= n && c.longitude >= w && c.longitude <= e;
+}
+
+/** Filter complaints within a city radius */
+function inCity(c: ComplaintWithImages, city: string): boolean {
+  if (city === 'All' || c.latitude == null || c.longitude == null) return true;
+  const coords = CITY_COORDS[city];
+  if (!coords) return true;
+  const dlat = c.latitude - coords[0];
+  const dlng = c.longitude - coords[1];
+  return Math.sqrt(dlat * dlat + dlng * dlng) <= CITY_RADIUS_DEG;
+}
+
 // Muted editorial chart palette
 const STATUS_COLORS: Record<string, string> = {
   Pending: '#B45309',       // amber-700
@@ -59,15 +164,23 @@ function groupByDate(complaints: ComplaintWithImages[]) {
 }
 
 export default function AnalyticsContent() {
+  // All complaints fetched from the API (server-side filters applied)
+  const [allComplaints, setAllComplaints] = useState<ComplaintWithImages[]>([]);
+  // Complaints after client-side state/city filtering
   const [filtered, setFiltered] = useState<ComplaintWithImages[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Server-side filters
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [issueType, setIssueType] = useState('All');
   const [status, setStatus] = useState('All');
+
+  // Client-side location filters
+  const [selectedState, setSelectedState] = useState('All');
+  const [selectedCity, setSelectedCity] = useState('All');
 
   const fetchComplaints = useCallback(async () => {
     setLoading(true);
@@ -87,9 +200,10 @@ export default function AnalyticsContent() {
       if (!res.ok) throw new Error('Fetch failed');
       const data = await res.json();
       const complaints: ComplaintWithImages[] = data.complaints ?? [];
-      setFiltered(complaints);
+      setAllComplaints(complaints);
 
-      if (dateFrom || dateTo || issueType !== 'All' || status !== 'All') {
+      const hasServerFilters = !!(dateFrom || dateTo || issueType !== 'All' || status !== 'All');
+      if (hasServerFilters) {
         const totalRes = await fetch('/api/complaints?include_images=false');
         if (totalRes.ok) {
           const totalData = await totalRes.json();
@@ -107,8 +221,17 @@ export default function AnalyticsContent() {
 
   useEffect(() => { fetchComplaints(); }, [fetchComplaints]);
 
+  // Apply client-side location filters whenever data or location filters change
+  useEffect(() => {
+    const result = allComplaints.filter(
+      (c) => inState(c, selectedState) && inCity(c, selectedCity)
+    );
+    setFiltered(result);
+  }, [allComplaints, selectedState, selectedCity]);
+
   function handleClear() {
     setDateFrom(''); setDateTo(''); setIssueType('All'); setStatus('All');
+    setSelectedState('All'); setSelectedCity('All');
   }
 
   const statusData = groupByStatus(filtered);
@@ -122,7 +245,10 @@ export default function AnalyticsContent() {
     resolved: filtered.filter((c) => c.status === 'Resolved').length,
   };
 
-  const hasFilters = !!(dateFrom || dateTo || issueType !== 'All' || status !== 'All');
+  const hasFilters = !!(
+    dateFrom || dateTo || issueType !== 'All' || status !== 'All' ||
+    selectedState !== 'All' || selectedCity !== 'All'
+  );
 
   const resolvedRate = stats.total > 0
     ? Math.round((stats.resolved / stats.total) * 100)
@@ -136,6 +262,28 @@ export default function AnalyticsContent() {
           <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Filters</p>
         </div>
         <div className="px-6 py-4 flex flex-wrap gap-3 items-end">
+          {/* State filter */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">State</label>
+            <select
+              value={selectedState}
+              onChange={(e) => { setSelectedState(e.target.value); setSelectedCity('All'); }}
+              className="border border-gray-200 rounded-sm px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 text-gray-700 max-w-[180px]"
+            >
+              {INDIAN_STATES.map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          {/* City filter */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">City</label>
+            <select
+              value={selectedCity}
+              onChange={(e) => setSelectedCity(e.target.value)}
+              className="border border-gray-200 rounded-sm px-3 py-2 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 text-gray-700"
+            >
+              {['All', ...Object.keys(CITY_COORDS)].map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">From Date</label>
             <input
@@ -186,7 +334,7 @@ export default function AnalyticsContent() {
               onClick={handleClear}
               className="text-xs text-gray-500 hover:text-gray-900 px-3 py-2 border border-gray-200 rounded-sm transition-colors uppercase tracking-wide self-end"
             >
-              Clear
+              Clear All
             </button>
           )}
         </div>
@@ -331,6 +479,11 @@ export default function AnalyticsContent() {
           {hasFilters && totalCount > 0 && filtered.length !== totalCount && (
             <p className="text-[10px] font-mono text-gray-400 text-right">
               Showing {filtered.length} of {totalCount} total complaints based on active filters.
+            </p>
+          )}
+          {(selectedState !== 'All' || selectedCity !== 'All') && (
+            <p className="text-[10px] font-mono text-blue-500 text-right">
+              Location filter applied — complaints matched by GPS coordinates.
             </p>
           )}
         </>
