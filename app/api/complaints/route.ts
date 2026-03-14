@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { generateComplaintId } from '@/lib/utils';
 import { sendStatusEmail } from '@/lib/email';
+import { reverseGeocodeCity } from '@/lib/cities';
 
 // ─── In-memory IP rate limiter ─────────────────────────────────────────────
 // Allows up to MAX_REQUESTS per IP within WINDOW_MS milliseconds.
@@ -139,6 +140,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not generate unique complaint ID' }, { status: 500 });
     }
 
+    // Auto-assign city from coordinates when not provided by the user
+    const lat = latStr ? parseFloat(latStr) : null;
+    const lon = lonStr ? parseFloat(lonStr) : null;
+    const resolvedCity =
+      city?.trim() ||
+      (lat !== null && lon !== null ? reverseGeocodeCity(lat, lon) : null);
+
     // Insert the complaint record
     const { data: complaint, error: insertError } = await supabaseAdmin
       .from('complaints')
@@ -149,9 +157,9 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         issue_type,
         description,
-        city: city?.trim() || null,
-        latitude: latStr ? parseFloat(latStr) : null,
-        longitude: lonStr ? parseFloat(lonStr) : null,
+        city: resolvedCity,
+        latitude: lat,
+        longitude: lon,
         status: 'Pending',
       })
       .select()

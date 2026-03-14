@@ -16,7 +16,7 @@ export const INDIAN_CITIES: string[] = [
 
 /** Bounding boxes [minLat, maxLat, minLon, maxLon] for reverse-geocoding. */
 const CITY_BOUNDS: Record<string, [number, number, number, number]> = {
-  Mumbai:             [18.87, 19.27, 72.77, 73.02],
+  Mumbai:             [18.87, 19.45, 72.77, 73.10],
   Delhi:              [28.40, 28.88, 76.84, 77.35],
   Bangalore:          [12.83, 13.18, 77.46, 77.78],
   Hyderabad:          [17.24, 17.56, 78.29, 78.61],
@@ -59,15 +59,48 @@ const CITY_BOUNDS: Record<string, [number, number, number, number]> = {
   Aurangabad:         [19.82, 19.96, 75.27, 75.42],
 };
 
+/** Approximate distance in km between two lat/lon points (Haversine formula). */
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth's mean radius in kilometres
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 /**
- * Reverse-geocode a lat/lon pair to a known Indian city name using bounding boxes.
- * Returns `null` if no matching city is found.
+ * Reverse-geocode a lat/lon pair to a known Indian city name.
+ * First tries bounding-box matching; if no box matches, falls back to the
+ * nearest city centroid within 50 km (Haversine distance).
+ * Returns `null` if no city is found within range.
  */
 export function reverseGeocodeCity(lat: number, lon: number): string | null {
+  // 1. Bounding-box match (fast, exact)
   for (const [city, [minLat, maxLat, minLon, maxLon]] of Object.entries(CITY_BOUNDS)) {
     if (lat >= minLat && lat <= maxLat && lon >= minLon && lon <= maxLon) {
       return city;
     }
   }
-  return null;
+
+  // 2. Nearest-city fallback: find the city whose bounding-box centroid is
+  //    closest to the given coordinates, within a 50 km radius.
+  const MAX_DIST_KM = 50;
+  let bestCity: string | null = null;
+  let bestDist = Infinity;
+
+  for (const [city, [minLat, maxLat, minLon, maxLon]] of Object.entries(CITY_BOUNDS)) {
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLon = (minLon + maxLon) / 2;
+    const dist = haversineKm(lat, lon, centerLat, centerLon);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestCity = city;
+    }
+  }
+
+  return bestDist <= MAX_DIST_KM ? bestCity : null;
 }
