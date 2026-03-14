@@ -101,6 +101,45 @@ export default function AdminDashboardPage() {
     resolved: complaints.filter((c) => c.status === 'Resolved').length,
   };
 
+  async function downloadCSV() {
+    try {
+      const res = await fetch('/api/complaints?include_images=false');
+      if (!res.ok) throw new Error('Fetch failed');
+      const data = await res.json();
+      const all: Complaint[] = data.complaints ?? [];
+
+      const escape = (v: string | number | null | undefined) => {
+        const s = v == null ? '' : String(v);
+        return `"${s.replace(/"/g, '""')}"`;
+      };
+      const headers = ['Complaint ID', 'Name', 'Email', 'Phone', 'Issue Type', 'Description', 'City', 'Latitude', 'Longitude', 'Status', 'Registered'].map(escape);
+      const rows = all.map((c) => [
+        escape(c.complaint_id),
+        escape(c.name),
+        escape(c.email),
+        escape(c.phone),
+        escape(c.issue_type),
+        escape(c.description),
+        escape(c.city),
+        escape(c.latitude),
+        escape(c.longitude),
+        escape(c.status),
+        escape(c.created_at),
+      ].join(','));
+
+      const csv = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `complaints_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Failed to export CSV. Please try again.');
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#F7F7F5]">
       {/* Top Nav */}
@@ -133,6 +172,15 @@ export default function AdminDashboardPage() {
               </svg>
               Analytics
             </Link>
+            <button
+              onClick={downloadCSV}
+              className="text-xs border border-gray-200 hover:border-gray-900 hover:bg-gray-900 hover:text-white text-gray-600 px-3 py-1.5 rounded-sm transition-all flex items-center gap-1.5 uppercase tracking-wide"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Export CSV
+            </button>
             <button
               onClick={handleLogout}
               className="text-xs border border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600 text-red-600 px-3 py-1.5 rounded-sm transition-all flex items-center gap-1.5 uppercase tracking-wide"

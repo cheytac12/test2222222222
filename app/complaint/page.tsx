@@ -61,12 +61,37 @@ export default function ComplaintPage() {
     setGpsError('');
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
+        const lat = position.coords.latitude.toFixed(6);
+        const lon = position.coords.longitude.toFixed(6);
         setForm((prev) => ({
           ...prev,
-          latitude: position.coords.latitude.toFixed(6),
-          longitude: position.coords.longitude.toFixed(6),
+          latitude: lat,
+          longitude: lon,
         }));
+
+        // Auto-detect city via OpenStreetMap Nominatim reverse geocoding
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
+            { headers: { 'Accept-Language': 'en', 'User-Agent': 'CrimeReport/1.0 (complaint-registration-form)' } }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            const city =
+              data.address?.city ||
+              data.address?.town ||
+              data.address?.village ||
+              data.address?.county ||
+              '';
+            if (city) {
+              setForm((prev) => ({ ...prev, city: prev.city || city }));
+            }
+          }
+        } catch {
+          // Geocoding failed silently – user can still enter city manually
+        }
+
         setGpsLoading(false);
       },
       (err) => {
