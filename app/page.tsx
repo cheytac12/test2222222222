@@ -31,6 +31,12 @@ export default function HomePage() {
             >
               Admin
             </Link>
+            <Link
+              href="/super-admin/login"
+              className="text-xs text-purple-700 border border-purple-300 hover:border-purple-700 hover:bg-purple-700 hover:text-white px-3 py-1.5 uppercase tracking-wide font-medium transition-all rounded-sm"
+            >
+              Super Admin
+            </Link>
           </div>
           <div className="flex sm:hidden items-center">
             <Link href="/complaint" className="text-xs bg-gray-900 text-white px-4 py-2 uppercase tracking-wide font-medium rounded-sm">

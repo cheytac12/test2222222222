@@ -4,29 +4,60 @@ A production-ready, full-stack crime complaint registration and tracking platfor
 
 ---
 
+## 🆕 Recent Changes
+
+### v1.1 — Authentication UI Refactor & Complaint Filtering Enhancements
+
+#### 1. Super Admin Login Relocated to Homepage
+- The **Super Admin Login** button is now accessible directly from the public homepage, placed beside the **Admin Login** button in the navigation bar.
+- The button directs users straight to `/super-admin/login` — **no standard admin authentication is required** first.
+- The "Super Admin" shortcut has been removed from the admin dashboard navigation to prevent confusion.
+
+#### 2. City-Based Filtering for Complaints (India)
+- The **Complaints Feed** now includes a comprehensive predefined list of **40+ major Indian cities** (Mumbai, Delhi, Bangalore, Hyderabad, Chennai, Kolkata, Pune, Jaipur, etc.).
+- A **reverse-geocoding utility** (`reverseGeocodeCity`) maps GPS coordinates (lat/lon) to the nearest known Indian city using spatial bounding boxes — no external API required.
+- The **"Filter by City"** dropdown is always populated with the full Indian city list, even before any complaints with location data are loaded.
+- Any city names that appear in the data but are not in the predefined list are appended at the end of the dropdown.
+
+#### 3. Timestamp-Based Filtering for Complaints
+- The Complaints Feed now has **"From" and "To" date pickers** for filtering complaints by their submission date.
+- Date range filters are passed as `date_from` / `date_to` query parameters to the existing `/api/complaints` API.
+- City and date filters can be **combined** — e.g. "Complaints in Mumbai from the last 7 days".
+- A **"✕ Clear dates"** button appears when a date filter is active, making it easy to reset.
+- The feed footer displays the active date range for clarity.
+
+---
+
 ## 📐 System Architecture
 
 ```
 Browser (Next.js / React)
   │
   ├── Public Pages
-  │   ├── / (Homepage)
+  │   ├── / (Homepage — Admin + Super Admin login buttons in nav)
   │   ├── /complaint (Complaint Registration Form)
   │   ├── /track (Complaint Tracking Page)
-  │   └── /map (Live Leaflet Map)
+  │   ├── /map (Live Leaflet Map)
+  │   └── /super-admin/login (Super Admin login — accessible from homepage)
   │
   ├── Admin Pages (session-protected)
   │   ├── /admin/login
   │   ├── /admin (Dashboard – complaint list + filters + status update)
   │   └── /admin/map (Admin Leaflet Map)
   │
+  ├── Super Admin Pages (super_admin_session cookie required)
+  │   └── /admin/super (User management)
+  │
   └── API Routes (Next.js App Router)
       ├── POST /api/complaints          → Submit new complaint + Email
-      ├── GET  /api/complaints          → List all (with filters)
+      ├── GET  /api/complaints          → List all (status, issue_type, city,
+      │                                    date_from, date_to, search, include_images)
       ├── GET  /api/complaints/[id]     → Get complaint + images by ID
       ├── PATCH /api/complaints/[id]    → Update status (admin)
       ├── POST /api/admin/login         → Admin login → session cookie
-      └── POST /api/admin/logout        → Clear session cookie
+      ├── POST /api/admin/logout        → Clear session cookie
+      ├── POST /api/super-admin/login   → Super admin login → super_admin_session cookie
+      └── GET/DELETE/PATCH /api/admin/super/users → Super admin user management
 
 Supabase (PostgreSQL)
   ├── complaints table
@@ -75,7 +106,7 @@ See [`database/schema.sql`](./database/schema.sql) for the full Supabase SQL sch
 ```
 /
 ├── app/
-│   ├── page.tsx                   # Public homepage
+│   ├── page.tsx                   # Public homepage (Admin + Super Admin login buttons)
 │   ├── layout.tsx                 # Root layout
 │   ├── globals.css                # Global styles + Leaflet CSS
 │   ├── complaint/page.tsx         # Complaint registration form
@@ -84,13 +115,19 @@ See [`database/schema.sql`](./database/schema.sql) for the full Supabase SQL sch
 │   ├── admin/
 │   │   ├── login/page.tsx         # Admin login
 │   │   ├── page.tsx               # Admin dashboard
-│   │   └── map/page.tsx           # Admin map view
+│   │   ├── map/page.tsx           # Admin map view
+│   │   └── super/page.tsx         # Super admin user management
+│   ├── super-admin/
+│   │   └── login/page.tsx         # Super admin login (linked from homepage)
 │   └── api/
 │       ├── complaints/route.ts    # GET all / POST new complaint
 │       ├── complaints/[id]/route.ts # GET by ID / PATCH status
 │       ├── admin/login/route.ts   # Admin login endpoint
-│       └── admin/logout/route.ts  # Admin logout endpoint
+│       ├── admin/logout/route.ts  # Admin logout endpoint
+│       ├── super-admin/login/route.ts  # Super admin login endpoint
+│       └── admin/super/users/route.ts  # Super admin user management
 ├── components/
+│   ├── ComplaintsFeed.tsx         # Live feed with city + date range filters
 │   ├── LiveMap.tsx                # Leaflet map with color-coded markers
 │   └── MiniMap.tsx                # Single-location mini map
 ├── lib/
@@ -219,9 +256,12 @@ Open [http://localhost:3000](http://localhost:3000).
 | `/complaint`         | Register a new complaint      |
 | `/track`             | Track complaint by ID         |
 | `/map`               | Live map of all complaints    |
+| `/dashboard`         | Combined public dashboard     |
 | `/admin/login`       | Admin login                   |
 | `/admin`             | Admin dashboard               |
 | `/admin/map`         | Admin map view                |
+| `/super-admin/login` | Super Admin login (accessible from homepage) |
+| `/admin/super`       | Super Admin user management   |
 
 ---
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ComplaintWithImages } from '@/types';
 import { formatDate } from '@/lib/utils';
+import { INDIAN_CITIES, reverseGeocodeCity } from '@/lib/cities';
 
 /** Colour badge per crime type */
 const TYPE_BADGE: Record<string, string> = {
@@ -24,10 +25,13 @@ const STATUS_BADGE: Record<string, string> = {
 
 const ISSUE_TYPES = ['All', 'Robbery', 'Murder', 'Assault', 'Theft', 'Harassment', 'Missing Person', 'Other'];
 
+// Re-export utilities for consumers that may need them
+export { INDIAN_CITIES, reverseGeocodeCity };
+
 /**
  * ComplaintsFeed – a scrollable list of the most recent complaints from all
- * users. Supports filtering by crime type and city, and groups complaints by
- * city when no specific city filter is active.
+ * users. Supports filtering by crime type, city (predefined Indian cities),
+ * and date range. Groups complaints by city when no specific city filter is active.
  */
 export default function ComplaintsFeed() {
   const [complaints, setComplaints] = useState<ComplaintWithImages[]>([]);
@@ -35,6 +39,8 @@ export default function ComplaintsFeed() {
   const [error, setError] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [cityFilter, setCityFilter] = useState('All');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const fetchComplaints = useCallback(async () => {
     setLoading(true);
@@ -43,6 +49,13 @@ export default function ComplaintsFeed() {
       const params = new URLSearchParams({ include_images: 'false' });
       if (typeFilter !== 'All') params.set('issue_type', typeFilter);
       if (cityFilter !== 'All') params.set('city', cityFilter);
+      if (startDate) params.set('date_from', startDate);
+      if (endDate) {
+        // Use start-of-next-day so the full endDate is included, regardless of server timezone
+        const next = new Date(endDate);
+        next.setDate(next.getDate() + 1);
+        params.set('date_to', next.toISOString().split('T')[0]);
+      }
       const res = await fetch(`/api/complaints?${params}`);
       if (!res.ok) throw new Error('Fetch failed');
       const data = await res.json();
@@ -52,19 +65,22 @@ export default function ComplaintsFeed() {
     } finally {
       setLoading(false);
     }
-  }, [typeFilter, cityFilter]);
+  }, [typeFilter, cityFilter, startDate, endDate]);
 
   useEffect(() => {
     fetchComplaints();
   }, [fetchComplaints]);
 
-  // Derive the list of unique cities from loaded complaints (for the filter dropdown)
-  const availableCities = [
-    'All',
-    ...Array.from(
-      new Set(complaints.map((c) => c.city).filter((c): c is string => Boolean(c)))
-    ).sort(),
-  ];
+  // Build city dropdown: predefined Indian cities + any extra cities found in data
+  const extraCities = Array.from(
+    new Set(
+      complaints
+        .map((c) => c.city?.trim())
+        .filter((c): c is string => c !== undefined && !INDIAN_CITIES.includes(c))
+    )
+  ).sort();
+
+  const availableCities = ['All', ...INDIAN_CITIES, ...extraCities];
 
   /**
    * When no city filter is active, group complaints by city.
@@ -119,6 +135,33 @@ export default function ComplaintsFeed() {
               {ISSUE_TYPES.map((t) => <option key={t}>{t}</option>)}
             </select>
           </div>
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">From</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border border-gray-200 rounded-sm px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 text-gray-700"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">To</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="border border-gray-200 rounded-sm px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 text-gray-700"
+            />
+          </div>
+          {(startDate || endDate) && (
+            <button
+              onClick={() => { setStartDate(''); setEndDate(''); }}
+              className="text-[10px] font-mono uppercase tracking-widest text-gray-400 hover:text-gray-700 transition-colors"
+              title="Clear date filters"
+            >
+              ✕ Clear dates
+            </button>
+          )}
         </div>
       </div>
 
@@ -225,6 +268,7 @@ export default function ComplaintsFeed() {
         <div className="px-6 py-3 border-t border-gray-100 bg-[#F7F7F5]">
           <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
             {complaints.length} complaint{complaints.length !== 1 ? 's' : ''} · {isGrouped ? `${groups.length} cit${groups.length !== 1 ? 'ies' : 'y'}` : cityFilter} · sorted by most recent
+            {(startDate || endDate) && ` · ${startDate || '…'} → ${endDate || '…'}`}
           </p>
         </div>
       )}
