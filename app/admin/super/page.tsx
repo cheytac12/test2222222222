@@ -19,8 +19,9 @@ const ROLE_BADGE: Record<string, string> = {
 };
 
 /**
- * SuperAdminDashboard – protected page only accessible to users whose JWT role
- * is "superadmin".  Allows viewing, removing, and role-managing admins.
+ * SuperAdminDashboard – protected page only accessible via a valid
+ * super_admin_session cookie (set by /api/super-admin/login).
+ * Allows viewing, removing, role-managing, and creating admin accounts.
  */
 export default function SuperAdminDashboard() {
   const router = useRouter();
@@ -35,17 +36,20 @@ export default function SuperAdminDashboard() {
   const [confirmAction, setConfirmAction] = useState<'remove' | 'revoke' | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Create admin form state
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createForm, setCreateForm] = useState({ name: '', phone: '', password: '' });
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [createSuccess, setCreateSuccess] = useState('');
+
   const fetchAdmins = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const res = await fetch('/api/admin/super/users');
-      if (res.status === 403) {
-        router.push('/admin');
-        return;
-      }
-      if (res.status === 401) {
-        router.push('/admin/login');
+      if (res.status === 403 || res.status === 401) {
+        router.push('/super-admin/login');
         return;
       }
       if (!res.ok) throw new Error('Failed to fetch');
@@ -61,8 +65,8 @@ export default function SuperAdminDashboard() {
   useEffect(() => { fetchAdmins(); }, [fetchAdmins]);
 
   async function handleLogout() {
-    await fetch('/api/admin/logout', { method: 'POST' });
-    router.push('/admin/login');
+    await fetch('/api/super-admin/logout', { method: 'POST' });
+    router.push('/super-admin/login');
   }
 
   function openConfirm(admin: AdminUser, action: 'remove' | 'revoke') {
@@ -86,7 +90,7 @@ export default function SuperAdminDashboard() {
           body: JSON.stringify({ id: confirmTarget.id }),
         });
       } else {
-        // revoke → downgrade to 'admin' (or remove)
+        // revoke → downgrade to 'admin'
         res = await fetch('/api/admin/super/users', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -114,6 +118,49 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  function handleCreateFormChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setCreateForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  async function handleCreateAdmin(e: React.FormEvent) {
+    e.preventDefault();
+    setCreateError('');
+    setCreateSuccess('');
+
+    if (!createForm.name || !createForm.phone || !createForm.password) {
+      setCreateError('Name, phone, and password are required.');
+      return;
+    }
+    if (createForm.password.length < 8) {
+      setCreateError('Password must be at least 8 characters.');
+      return;
+    }
+
+    setCreateLoading(true);
+    try {
+      const res = await fetch('/api/super-admin/create-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createForm),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setCreateError(data.error ?? 'Failed to create admin.');
+        return;
+      }
+
+      setCreateSuccess(`Admin account for "${createForm.name}" created successfully.`);
+      setCreateForm({ name: '', phone: '', password: '' });
+      setShowCreateForm(false);
+      fetchAdmins();
+    } catch {
+      setCreateError('Network error. Please try again.');
+    } finally {
+      setCreateLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#F7F7F5]">
       {/* Nav */}
@@ -136,15 +183,26 @@ export default function SuperAdminDashboard() {
               <span className="text-xs font-bold text-gray-900 uppercase tracking-wide">Super Admin</span>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-xs border border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600 text-red-600 px-3 py-1.5 rounded-sm transition-all flex items-center gap-1.5 uppercase tracking-wide"
-          >
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-            </svg>
-            Logout
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { setShowCreateForm(true); setCreateError(''); setCreateSuccess(''); }}
+              className="text-xs border border-purple-200 hover:bg-purple-700 hover:text-white hover:border-purple-700 text-purple-700 px-3 py-1.5 rounded-sm transition-all flex items-center gap-1.5 uppercase tracking-wide"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              New Admin
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-xs border border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600 text-red-600 px-3 py-1.5 rounded-sm transition-all flex items-center gap-1.5 uppercase tracking-wide"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+              </svg>
+              Logout
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -153,17 +211,17 @@ export default function SuperAdminDashboard() {
         <div className="mb-6">
           <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-1">User Management</p>
           <h1 className="text-xl font-bold text-gray-900">Admin &amp; User Management</h1>
-          <p className="text-sm text-gray-500 mt-1">View, manage, and revoke access for all admins on the platform.</p>
+          <p className="text-sm text-gray-500 mt-1">View, manage, and provision admin accounts on the platform.</p>
         </div>
 
         {/* Success banner */}
-        {actionSuccess && (
+        {(actionSuccess || createSuccess) && (
           <div className="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-sm px-4 py-3 text-sm flex items-center gap-2">
             <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
-            {actionSuccess}
-            <button onClick={() => setActionSuccess('')} className="ml-auto text-green-600 hover:text-green-900">
+            {actionSuccess || createSuccess}
+            <button onClick={() => { setActionSuccess(''); setCreateSuccess(''); }} className="ml-auto text-green-600 hover:text-green-900">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -269,6 +327,115 @@ export default function SuperAdminDashboard() {
           </div>
         )}
       </main>
+
+      {/* Create Admin Modal */}
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white border border-gray-200 border-t-4 border-t-purple-700 max-w-md w-full overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-200 flex items-start justify-between">
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-1">Admin Management</p>
+                <h3 className="text-base font-bold text-gray-900">Create New Admin</h3>
+              </div>
+              <button
+                onClick={() => { setShowCreateForm(false); setCreateError(''); }}
+                className="text-gray-400 hover:text-gray-900 transition-colors ml-4"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAdmin} className="p-6 space-y-4">
+              {createError && (
+                <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-sm px-4 py-3 flex items-center gap-2">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                  </svg>
+                  {createError}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="create-name" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Full Name
+                </label>
+                <input
+                  id="create-name"
+                  name="name"
+                  type="text"
+                  value={createForm.name}
+                  onChange={handleCreateFormChange}
+                  placeholder="John Smith"
+                  required
+                  className="w-full border border-gray-200 rounded-sm px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-purple-700 focus:border-purple-700"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="create-phone" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Phone Number
+                </label>
+                <input
+                  id="create-phone"
+                  name="phone"
+                  type="tel"
+                  value={createForm.phone}
+                  onChange={handleCreateFormChange}
+                  placeholder="+1234567890"
+                  required
+                  className="w-full border border-gray-200 rounded-sm px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-purple-700 focus:border-purple-700"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="create-password" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
+                  Password
+                </label>
+                <input
+                  id="create-password"
+                  name="password"
+                  type="password"
+                  value={createForm.password}
+                  onChange={handleCreateFormChange}
+                  placeholder="Min. 8 characters"
+                  required
+                  minLength={8}
+                  className="w-full border border-gray-200 rounded-sm px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-purple-700 focus:border-purple-700"
+                />
+                <p className="text-[10px] text-gray-400 mt-1">Must be at least 8 characters. The password will be securely hashed.</p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={createLoading}
+                  className="flex-1 bg-purple-700 hover:bg-purple-800 text-white px-4 py-2.5 rounded-sm font-bold text-xs uppercase tracking-widest transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {createLoading ? (
+                    <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                      Create Admin
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowCreateForm(false); setCreateError(''); }}
+                  className="flex-1 border border-gray-200 hover:border-gray-400 text-gray-600 px-4 py-2.5 rounded-sm font-medium text-xs uppercase tracking-widest transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Confirm modal */}
       {confirmTarget && confirmAction && (

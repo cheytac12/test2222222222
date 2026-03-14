@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
   const search = searchParams.get('search'); // search by complaint_id
   const dateFrom = searchParams.get('date_from'); // ISO date string
   const dateTo = searchParams.get('date_to'); // ISO date string
+  const city = searchParams.get('city'); // filter by city
   const includeImages = searchParams.get('include_images') !== 'false';
 
   const selectClause = includeImages ? '*, complaint_images(*)' : '*';
@@ -55,6 +56,7 @@ export async function GET(request: NextRequest) {
   if (search) query = query.ilike('complaint_id', `%${search}%`);
   if (dateFrom) query = query.gte('created_at', dateFrom);
   if (dateTo) query = query.lte('created_at', dateTo);
+  if (city) query = query.ilike('city', city);
 
   const { data, error } = await query;
 
@@ -98,6 +100,7 @@ export async function POST(request: NextRequest) {
     const phone = formData.get('phone') as string | null;
     const issue_type = formData.get('issue_type') as string;
     const description = formData.get('description') as string;
+    const city = formData.get('city') as string | null;
     const latStr = formData.get('latitude') as string | null;
     const lonStr = formData.get('longitude') as string | null;
     const images = formData.getAll('images') as File[];
@@ -146,6 +149,7 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         issue_type,
         description,
+        city: city?.trim() || null,
         latitude: latStr ? parseFloat(latStr) : null,
         longitude: lonStr ? parseFloat(lonStr) : null,
         status: 'Pending',

@@ -19,6 +19,7 @@ export interface Complaint {
   phone: string | null;
   issue_type: IssueType | string;
   description: string;
+  city: string | null;      // optional city where the incident occurred
   latitude: number | null;
   longitude: number | null;
   status: ComplaintStatus;
