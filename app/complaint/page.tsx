@@ -24,7 +24,6 @@ export default function ComplaintPage() {
     phone: '',
     issue_type: '',
     description: '',
-    city: '',
     latitude: '',
     longitude: '',
     website: '', // honeypot – must remain empty
@@ -70,28 +69,6 @@ export default function ComplaintPage() {
           longitude: lon,
         }));
 
-        // Auto-detect city via OpenStreetMap Nominatim reverse geocoding
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
-            { headers: { 'Accept-Language': 'en', 'User-Agent': 'CrimeReport/1.0 (complaint-registration-form)' } }
-          );
-          if (res.ok) {
-            const data = await res.json();
-            const city =
-              data.address?.city ||
-              data.address?.town ||
-              data.address?.village ||
-              data.address?.county ||
-              '';
-            if (city) {
-              setForm((prev) => ({ ...prev, city: prev.city || city }));
-            }
-          }
-        } catch {
-          // Geocoding failed silently – user can still enter city manually
-        }
-
         setGpsLoading(false);
       },
       (err) => {
@@ -129,7 +106,6 @@ export default function ComplaintPage() {
       fd.append('phone', form.phone.trim());
       fd.append('issue_type', form.issue_type);
       fd.append('description', form.description.trim());
-      if (form.city.trim()) fd.append('city', form.city.trim());
       fd.append('latitude', form.latitude);
       fd.append('longitude', form.longitude);
       fd.append('website', form.website);
@@ -315,22 +291,6 @@ export default function ComplaintPage() {
                   placeholder="Describe the incident in detail – what happened, when, who was involved, etc."
                   className="w-full border border-gray-200 rounded-sm px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 resize-y placeholder:text-gray-400"
                 />
-              </div>
-
-              <div>
-                <label htmlFor="city" className="block text-xs font-medium text-gray-700 mb-1.5 uppercase tracking-wide">
-                  City <span className="text-gray-400 normal-case font-normal">(Optional)</span>
-                </label>
-                <input
-                  id="city"
-                  name="city"
-                  type="text"
-                  value={form.city}
-                  onChange={handleChange}
-                  placeholder="e.g. New York, Mumbai"
-                  className="w-full border border-gray-200 rounded-sm px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 placeholder:text-gray-400"
-                />
-                <p className="text-xs text-gray-400 mt-1.5">Helps categorize your complaint by location.</p>
               </div>
             </div>
           </div>
