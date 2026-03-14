@@ -30,15 +30,13 @@ export { INDIAN_CITIES, reverseGeocodeCity };
 
 /**
  * ComplaintsFeed – a scrollable list of the most recent complaints from all
- * users. Supports filtering by crime type, city (predefined Indian cities),
- * and date range. Groups complaints by city when no specific city filter is active.
+ * users. Supports filtering by issue type and date range.
  */
 export default function ComplaintsFeed() {
   const [complaints, setComplaints] = useState<ComplaintWithImages[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
-  const [cityFilter, setCityFilter] = useState('All');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -48,7 +46,6 @@ export default function ComplaintsFeed() {
     try {
       const params = new URLSearchParams({ include_images: 'false' });
       if (typeFilter !== 'All') params.set('issue_type', typeFilter);
-      if (cityFilter !== 'All') params.set('city', cityFilter);
       if (startDate) params.set('date_from', startDate);
       if (endDate) {
         // Use start-of-next-day so the full endDate is included, regardless of server timezone
@@ -65,45 +62,11 @@ export default function ComplaintsFeed() {
     } finally {
       setLoading(false);
     }
-  }, [typeFilter, cityFilter, startDate, endDate]);
+  }, [typeFilter, startDate, endDate]);
 
   useEffect(() => {
     fetchComplaints();
   }, [fetchComplaints]);
-
-  // Build city dropdown: predefined Indian cities + any extra cities found in data
-  const extraCities = Array.from(
-    new Set(
-      complaints
-        .map((c) => c.city?.trim())
-        .filter((c): c is string => c !== undefined && !INDIAN_CITIES.includes(c))
-    )
-  ).sort();
-
-  const availableCities = ['All', ...INDIAN_CITIES, ...extraCities];
-
-  /**
-   * When no city filter is active, group complaints by city.
-   * Complaints without a city are placed under an "Unknown / No City" group.
-   */
-  function groupedByCity(): { city: string; items: ComplaintWithImages[] }[] {
-    const map = new Map<string, ComplaintWithImages[]>();
-    for (const c of complaints) {
-      const key = c.city?.trim() || 'Unknown / No City';
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(c);
-    }
-    // Sort city groups alphabetically, keep "Unknown" last
-    const sorted = Array.from(map.entries()).sort(([a], [b]) => {
-      if (a === 'Unknown / No City') return 1;
-      if (b === 'Unknown / No City') return -1;
-      return a.localeCompare(b);
-    });
-    return sorted.map(([city, items]) => ({ city, items }));
-  }
-
-  const isGrouped = cityFilter === 'All';
-  const groups = isGrouped ? groupedByCity() : [{ city: cityFilter, items: complaints }];
 
   return (
     <div className="bg-white border border-gray-200 border-t-4 border-t-gray-900">
@@ -115,16 +78,6 @@ export default function ComplaintsFeed() {
         </div>
         {/* Filters */}
         <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">City</label>
-            <select
-              value={cityFilter}
-              onChange={(e) => setCityFilter(e.target.value)}
-              className="border border-gray-200 rounded-sm px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-1 focus:ring-gray-900 text-gray-700"
-            >
-              {availableCities.map((c) => <option key={c}>{c}</option>)}
-            </select>
-          </div>
           <div className="flex items-center gap-2">
             <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Type</label>
             <select
@@ -182,84 +135,69 @@ export default function ComplaintsFeed() {
         <div className="p-10 text-center text-sm text-gray-400">No complaints found.</div>
       ) : (
         <div className="max-h-[560px] overflow-y-auto">
-          {groups.map(({ city, items }) => (
-            <div key={city}>
-              {/* City group header — only shown when grouping all cities */}
-              {isGrouped && (
-                <div className="px-6 py-2 bg-gray-50 border-b border-gray-100 flex items-center gap-2 sticky top-0 z-10">
-                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                  </svg>
-                  <span className="text-[10px] font-mono font-semibold uppercase tracking-widest text-gray-600">{city}</span>
-                  <span className="text-[10px] font-mono text-gray-400 ml-auto">{items.length} complaint{items.length !== 1 ? 's' : ''}</span>
-                </div>
-              )}
-              <div className="divide-y divide-gray-100">
-                {items.map((c) => (
-                  <div key={c.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start justify-between gap-4 flex-wrap">
-                      {/* Left: ID + type */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono font-bold text-xs text-gray-900 tracking-wider">{c.complaint_id}</span>
-                        <span
-                          className={`px-2 py-0.5 rounded-sm text-[10px] font-semibold border uppercase tracking-wide ${
-                            TYPE_BADGE[c.issue_type] ?? 'bg-gray-50 text-gray-600 border-gray-200'
-                          }`}
-                        >
-                          {c.issue_type}
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 rounded-sm text-[10px] font-semibold border uppercase tracking-wide ${
-                            STATUS_BADGE[c.status] ?? 'bg-gray-50 text-gray-600 border-gray-200'
-                          }`}
-                        >
-                          {c.status}
-                        </span>
-                      </div>
-                      {/* Right: dates */}
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Registered</p>
-                        <p className="text-xs text-gray-700 font-medium">{formatDate(c.created_at)}</p>
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    <p className="mt-2 text-xs text-gray-600 leading-relaxed line-clamp-2">
-                      {c.description}
-                    </p>
-
-                    {/* Meta row */}
-                    <div className="mt-2 flex flex-wrap gap-3 items-center">
-                      {c.city && (
-                        <span className="text-[10px] font-mono text-gray-400 flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
-                          </svg>
-                          {c.city}
-                        </span>
-                      )}
-                      {c.latitude != null && c.longitude != null && (
-                        <span className="text-[10px] font-mono text-gray-400 flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                          </svg>
-                          {c.latitude.toFixed(4)}, {c.longitude.toFixed(4)}
-                        </span>
-                      )}
-                      <span className="text-[10px] font-mono text-gray-400 flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {new Date(c.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
+          <div className="divide-y divide-gray-100">
+            {complaints.map((c) => (
+              <div key={c.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  {/* Left: ID + type */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono font-bold text-xs text-gray-900 tracking-wider">{c.complaint_id}</span>
+                    <span
+                      className={`px-2 py-0.5 rounded-sm text-[10px] font-semibold border uppercase tracking-wide ${
+                        TYPE_BADGE[c.issue_type] ?? 'bg-gray-50 text-gray-600 border-gray-200'
+                      }`}
+                    >
+                      {c.issue_type}
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded-sm text-[10px] font-semibold border uppercase tracking-wide ${
+                        STATUS_BADGE[c.status] ?? 'bg-gray-50 text-gray-600 border-gray-200'
+                      }`}
+                    >
+                      {c.status}
+                    </span>
                   </div>
-                ))}
+                  {/* Right: dates */}
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Registered</p>
+                    <p className="text-xs text-gray-700 font-medium">{formatDate(c.created_at)}</p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="mt-2 text-xs text-gray-600 leading-relaxed line-clamp-2">
+                  {c.description}
+                </p>
+
+                {/* Meta row */}
+                <div className="mt-2 flex flex-wrap gap-3 items-center">
+                  {c.city && (
+                    <span className="text-[10px] font-mono text-gray-400 flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+                      </svg>
+                      {c.city}
+                    </span>
+                  )}
+                  {c.latitude != null && c.longitude != null && (
+                    <span className="text-[10px] font-mono text-gray-400 flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                      </svg>
+                      {c.latitude.toFixed(4)}, {c.longitude.toFixed(4)}
+                    </span>
+                  )}
+                  <span className="text-[10px] font-mono text-gray-400 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {new Date(c.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -267,7 +205,7 @@ export default function ComplaintsFeed() {
       {!loading && !error && (
         <div className="px-6 py-3 border-t border-gray-100 bg-[#F7F7F5]">
           <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
-            {complaints.length} complaint{complaints.length !== 1 ? 's' : ''} · {isGrouped ? `${groups.length} cit${groups.length !== 1 ? 'ies' : 'y'}` : cityFilter} · sorted by most recent
+            {complaints.length} complaint{complaints.length !== 1 ? 's' : ''} · sorted by most recent
             {(startDate || endDate) && ` · ${startDate || '…'} → ${endDate || '…'}`}
           </p>
         </div>
