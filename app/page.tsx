@@ -90,7 +90,7 @@ export default function HomePage() {
             {[
               { value: '24/7', label: 'Platform Uptime' },
               { value: 'GPS', label: 'Location Precision' },
-              { value: 'SMS', label: 'Instant Alerts' },
+              { value: 'Email', label: 'Instant Alerts' },
             ].map((s) => (
               <div key={s.label} className="px-6 first:pl-0 last:pr-0 text-center">
                 <div className="text-2xl font-bold text-gray-900">{s.value}</div>
@@ -118,7 +118,7 @@ export default function HomePage() {
                 {
                   step: '02',
                   title: 'Get Instant Confirmation',
-                  desc: 'Receive an SMS with your unique Complaint ID immediately after submission. Use it any time to check your case status.',
+                  desc: 'Receive an email with your unique Complaint ID immediately after submission. Use it any time to check your case status.',
                   accent: 'border-t-4 border-t-blue-700',
                 },
                 {
@@ -162,7 +162,7 @@ export default function HomePage() {
                 },
                 {
                   label: 'Real-Time Updates',
-                  sub: 'Live map refresh and instant SMS alerts keep you informed every step of the way.',
+                  sub: 'Live map refresh and instant email alerts keep you informed every step of the way.',
                   accent: 'border-t-4 border-t-green-700',
                 },
               ].map((s, i) => (
