@@ -15,17 +15,14 @@ export default function HomePage() {
             <span className="text-sm font-bold text-gray-900 tracking-tight uppercase">CrimeReport</span>
           </div>
           <div className="hidden sm:flex items-center gap-0">
+            <Link href="/dashboard" className="text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 uppercase tracking-wide transition-all">
+              Dashboard
+            </Link>
             <Link href="/complaint" className="text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 uppercase tracking-wide transition-all">
               File Complaint
             </Link>
             <Link href="/track" className="text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 uppercase tracking-wide transition-all">
               Track
-            </Link>
-            <Link href="/map" className="text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 uppercase tracking-wide transition-all">
-              Live Map
-            </Link>
-            <Link href="/analytics" className="text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-3 py-2 uppercase tracking-wide transition-all">
-              Analytics
             </Link>
             <div className="w-px h-4 bg-gray-200 mx-2" />
             <Link
@@ -210,8 +207,7 @@ export default function HomePage() {
             <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">CrimeReport</span>
           </div>
           <div className="flex items-center gap-6">
-            <Link href="/map" className="text-xs uppercase tracking-wide hover:text-gray-700 transition-colors">Live Map</Link>
-            <Link href="/analytics" className="text-xs uppercase tracking-wide hover:text-gray-700 transition-colors">Analytics</Link>
+            <Link href="/dashboard" className="text-xs uppercase tracking-wide hover:text-gray-700 transition-colors">Dashboard</Link>
             <Link href="/admin/login" className="text-xs uppercase tracking-wide hover:text-gray-700 transition-colors">Admin</Link>
           </div>
           <div className="text-right">
